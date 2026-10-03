@@ -6,6 +6,8 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+.vscode
+.vscode/*
 
 node_modules
 dist
@@ -26,6 +28,7 @@ dist-ssr
 .github
 .codacy
 .agent
+.agent/*
 .codacy.yaml
 .gemini.yaml
 .cursor
@@ -43,4 +46,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
+skills-lock.json

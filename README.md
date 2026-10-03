@@ -1,6 +1,21 @@
 # FEC SDC Hackathon Project
 
-This repository contains the full-stack website and API for the FEC SDC hackathon. It includes a React + Vite frontend for the public event experience and an Express backend for registration, problem retrieval, and submission handling.
+This project is a full-stack hackathon website for FEC SDC, combining a polished event landing experience with a backend for registrations, challenge data, and participant submissions. The frontend is built with React and Vite, while the backend provides the API layer and database integration needed to support the contest workflow.
+
+## Site Map
+
+```text
+/
+├── Home
+├── Hackathon Overview
+├── Tracks & Challenges
+├── Problem Statements
+├── Registration
+├── Sponsors
+├── FAQ
+├── Results
+└── Contact / Socials
+```
 
 ## Tech Stack
 
