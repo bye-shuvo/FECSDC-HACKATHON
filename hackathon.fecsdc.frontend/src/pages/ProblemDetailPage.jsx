@@ -9,7 +9,7 @@ import { PageHeader } from "../components/layout/PageHeader.jsx";
 import { PillMark } from "../components/ui/PillDividers.jsx";
 import { SpotlightCard } from "../components/ui/SpotlightCard.jsx";
 import { LockedState } from "../components/ui/LockedState.jsx";
-import { problems } from "../data/problems.js";
+import { problems } from "../data/loadData.js";
 import NotFoundPage from "./NotFoundPage.jsx";
 import { Reveal } from "../components/motion/Reveal.jsx";
 

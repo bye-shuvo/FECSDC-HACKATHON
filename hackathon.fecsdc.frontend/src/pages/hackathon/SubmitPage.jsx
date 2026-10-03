@@ -12,6 +12,7 @@ import { useDocumentTitle } from "../../hooks/useDocumentTitle.js";
 import { useProblemLock } from "../../hooks/useProblemLock.js";
 import { useQuery, useMutation } from "../../hooks/useApiQuery.js";
 import { siteConfig } from "../../data/siteConfig.js";
+import { problems } from "../../data/loadData.js";
 import { apiFetch, ApiClientError } from "../../lib/api.js";
 import { Container, Section } from "../../components/ui/Section.jsx";
 import { PageHeader } from "../../components/layout/PageHeader.jsx";
@@ -123,15 +124,7 @@ export default function SubmitPage() {
 
   useEffect(() => {
     if (questionsUrl) return;
-    let isActive = true;
-    import("../../data/problems.js").then(({ problems }) => {
-      if (isActive) {
-        startTransition(() => setFallbackQuestions(buildFallbackQuestions(problems)));
-      }
-    });
-    return () => {
-      isActive = false;
-    };
+    startTransition(() => setFallbackQuestions(buildFallbackQuestions(problems)));
   }, [questionsUrl]);
 
   const questions = useMemo(() => {

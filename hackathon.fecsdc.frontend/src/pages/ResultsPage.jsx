@@ -7,7 +7,7 @@ import { PillMark } from "../components/ui/PillDividers.jsx";
 import { TiltCard } from "../components/ui/TiltCard.jsx";
 import { SpotlightCard } from "../components/ui/SpotlightCard.jsx";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/ui/Table.jsx";
-import { getSolvedSummary, resultsConfig, leaderboardData } from "../data/results.js";
+import { getSolvedSummary, resultsConfig, leaderboardData } from "../data/loadData.js";
 import { Reveal } from "../components/motion/Reveal.jsx";
 
 const TRACKS = ["Problem Solving", "Web Development"];

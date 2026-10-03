@@ -8,7 +8,7 @@ import { PageHeader } from "../components/layout/PageHeader.jsx";
 import { PillMark } from "../components/ui/PillDividers.jsx";
 import { LockedState } from "../components/ui/LockedState.jsx";
 import { SpotlightCard } from "../components/ui/SpotlightCard.jsx";
-import { problems, problemTracks } from "../data/problems.js";
+import { problems, problemTracks } from "../data/loadData.js";
 import { Reveal } from "../components/motion/Reveal.jsx";
 
 export default function ProblemStatementsPage() {
