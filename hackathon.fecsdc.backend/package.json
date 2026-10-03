@@ -4,10 +4,12 @@
   "description": "",
   "license": "ISC",
   "author": "yousuf",
+  "modifier": "Shuvo",
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "node --check index.js",
     "start": "node index.js",
     "dev": "nodemon index.js"
   },
