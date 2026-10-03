@@ -1,4 +1,5 @@
 const dotenv = require('dotenv');
+const cors = require("cors");
 
 dotenv.config();
 
@@ -8,7 +9,29 @@ const homeRouter = require('./routes/router');
 const { initializeDatabase } = require('./config/config');
 
 const app = express();
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'https://fecsdc-hackathon.vercel.app',
+  'https://fecsdc-hackathon-backend.onrender.com'
+];
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+    callback(new Error('Not allowed by CORS'));
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+};
+
 app.use(express.json({ limit: '32kb' }));
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 app.use('/api-workbench', express.static(path.join(__dirname, 'frontend')));
 app.use(homeRouter);
 

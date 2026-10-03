@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@tidbcloud/serverless": "^0.3.0",
+    "cors": "^2.8.6",
     "dotenv": "^18.0.5",
     "express": "^5.2.1"
   },
