@@ -85,11 +85,11 @@ export default function PrizesPage() {
                           }`}
                         >
                           {isChampion ? (
-                            <Crown className="w-7 h-7" />
+                            <Crown className="z-50 w-7 h-7" />
                           ) : isRunnerUp ? (
-                            <Trophy className="w-7 h-7" />
+                            <Trophy className="z-50 w-7 h-7" />
                           ) : (
-                            <Award className="w-7 h-7" />
+                            <Award className="z-50 w-7 h-7" />
                           )}
                         </div>
                         <div
@@ -115,7 +115,7 @@ export default function PrizesPage() {
                               height="160"
                               loading="lazy"
                               decoding="async"
-                              className={`h-48 w-48 object-contain group-hover:fill-[#ff8e47] transition-transform duration-150 ease-(--ease-fast) group-hover:-translate-y-1.5 group-hover:rotate-2 ${isChampion ? "scale-[2]" : prize.rank == 2 ? "scale-[2]" : "scale-[2]"}`}
+                              className={`-z-10 h-48 w-48 object-contain group-hover:fill-[#ff8e47] transition-transform duration-150 ease-(--ease-fast) group-hover:-translate-y-1.5 group-hover:rotate-2 ${isChampion ? "scale-[2]" : prize.rank == 2 ? "scale-[2]" : "scale-[2]"}`}
                             />
                           </div>
                         </div>

@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { motion } from "motion/react";
+import { useCallback, useEffect, useRef } from "react";
+import { motion, useMotionValue, useSpring } from "motion/react";
 import { MOTION_SPRING } from "../../lib/motion.js";
 import { useReducedMotion } from "../../hooks/useReducedMotion.js";
 
@@ -18,34 +18,60 @@ export function TiltCard({
   ...props
 }) {
   const cardRef = useRef(null);
-  const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0, glareX: 50, glareY: 50 });
-  const [isHovered, setIsHovered] = useState(false);
+  const glareRef = useRef(null);
+  const boundsRef = useRef(null);
+  const resizeObserverRef = useRef(null);
   const prefersReduced = useReducedMotion();
+  const rotateX = useMotionValue(0);
+  const rotateY = useMotionValue(0);
+  const springRotateX = useSpring(rotateX, MOTION_SPRING);
+  const springRotateY = useSpring(rotateY, MOTION_SPRING);
+
+  const updateBounds = useCallback(() => {
+    if (cardRef.current) boundsRef.current = cardRef.current.getBoundingClientRect();
+  }, []);
+
+  const stopObservingBounds = useCallback(() => {
+    resizeObserverRef.current?.disconnect();
+    resizeObserverRef.current = null;
+    window.removeEventListener("resize", updateBounds);
+    window.removeEventListener("scroll", updateBounds, true);
+  }, [updateBounds]);
+
+  useEffect(() => () => stopObservingBounds(), [stopObservingBounds]);
 
   const handleMouseMove = (e) => {
-    if (prefersReduced || !cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
+    if (prefersReduced || !boundsRef.current) return;
+    const rect = boundsRef.current;
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
 
-    const rotateX = ((y - centerY) / centerY) * -maxTilt;
-    const rotateY = ((x - centerX) / centerX) * maxTilt;
-
-    setTilt({
-      rotateX,
-      rotateY,
-      glareX: (x / rect.width) * 100,
-      glareY: (y / rect.height) * 100,
-    });
+    rotateX.set(((y - centerY) / centerY) * -maxTilt);
+    rotateY.set(((x - centerX) / centerX) * maxTilt);
+    if (glareRef.current) {
+      glareRef.current.style.background = `radial-gradient(400px circle at ${(x / rect.width) * 100}% ${(y / rect.height) * 100}%, rgba(248, 156, 46, 0.18), transparent 70%)`;
+    }
   };
 
-  const handleMouseEnter = () => setIsHovered(true);
+  const handleMouseEnter = () => {
+    updateBounds();
+    if (typeof ResizeObserver !== "undefined" && cardRef.current) {
+      resizeObserverRef.current = new ResizeObserver(updateBounds);
+      resizeObserverRef.current.observe(cardRef.current);
+    }
+    window.addEventListener("resize", updateBounds, { passive: true });
+    window.addEventListener("scroll", updateBounds, { passive: true, capture: true });
+    if (glareRef.current) glareRef.current.style.display = "block";
+  };
   const handleMouseLeave = () => {
-    setIsHovered(false);
-    setTilt({ rotateX: 0, rotateY: 0, glareX: 50, glareY: 50 });
+    stopObservingBounds();
+    boundsRef.current = null;
+    if (glareRef.current) glareRef.current.style.display = "none";
+    rotateX.set(0);
+    rotateY.set(0);
   };
 
   return (
@@ -55,28 +81,22 @@ export function TiltCard({
         onMouseMove={handleMouseMove}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        animate={
-          prefersReduced
-            ? {}
-            : {
-                rotateX: tilt.rotateX,
-                rotateY: tilt.rotateY,
-              }
-        }
+        style={{ rotateX: springRotateX, rotateY: springRotateY, transformStyle: "preserve-3d" }}
         whileTap={prefersReduced ? {} : { scale: 0.98 }}
         transition={MOTION_SPRING}
         onClick={onClick}
         data-cursor="card"
         className={`relative overflow-hidden rounded-md border border-border bg-card transition-colors duration-200 hover:border-primary/70 focus-visible:outline-2 focus-visible:outline-ring ${className}`}
-        style={{ transformStyle: "preserve-3d" }}
         {...props}
       >
         {/* Dynamic Glare Highlight */}
-        {glare && isHovered && !prefersReduced && (
+        {glare && !prefersReduced && (
           <div
+            ref={glareRef}
             className="pointer-events-none absolute -inset-px transition-opacity duration-300 opacity-30 z-20"
             style={{
-              background: `radial-gradient(400px circle at ${tilt.glareX}% ${tilt.glareY}%, rgba(248, 156, 46, 0.18), transparent 70%)`,
+              display: "none",
+              background: "radial-gradient(400px circle at 50% 50%, rgba(248, 156, 46, 0.18), transparent 70%)",
             }}
             aria-hidden="true"
           />

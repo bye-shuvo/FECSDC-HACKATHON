@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, memo } from "react";
+import { useEffect, useRef, memo } from "react";
 import { Lock, MoveHorizontal, Eye } from "lucide-react";
 import { shouldUseStaticPointerEffects } from "../../lib/motion.js";
 
@@ -12,19 +12,23 @@ import { shouldUseStaticPointerEffects } from "../../lib/motion.js";
  * - Respects (pointer: fine) and prefers-reduced-motion
  */
 export const CustomCursor = memo(function CustomCursor() {
+  const cursorRootRef = useRef(null);
   const dotWrapperRef = useRef(null);
   const ringWrapperRef = useRef(null);
+  const innerRingRef = useRef(null);
   const rippleWrapperRef = useRef(null);
-
-  const [cursorState, setCursorState] = useState("default");
-  const [cursorLabel, setCursorLabel] = useState("");
-  const [isVisible, setIsVisible] = useState(false);
-  const [isClicking, setIsClicking] = useState(false);
+  const spotlightRef = useRef(null);
+  const lockIconRef = useRef(null);
+  const dragIconRef = useRef(null);
+  const viewIconRef = useRef(null);
+  const cursorLabelRef = useRef(null);
+  const isClickingRef = useRef(false);
 
   // Position refs for jitter-free tracking
   const target = useRef({ x: -200, y: -200 });
   const ringPos = useRef({ x: -200, y: -200 });
   const hasFirstMove = useRef(false);
+  const pointerInside = useRef(false);
   const rafId = useRef(null);
   const isLoopRunning = useRef(false);
   const lastTimeRef = useRef(0);
@@ -42,27 +46,30 @@ export const CustomCursor = memo(function CustomCursor() {
     }
 
     document.body.classList.add("custom-cursor-active");
-
-    const updatePosition = (x, y) => {
-      // 1. Instant dot transform
-      if (dotWrapperRef.current) {
-        dotWrapperRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    spotlightRef.current = document.getElementById("background-cursor-spotlight");
+    const setCursorVisible = (visible) => {
+      const opacity = visible ? "1" : "0";
+      if (cursorRootRef.current && cursorRootRef.current.style.opacity !== opacity) {
+        cursorRootRef.current.style.opacity = opacity;
       }
-
-      // 2. Ripple position
-      if (rippleWrapperRef.current) {
-        rippleWrapperRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    };
+    const applyCursorState = (state, label) => {
+      if (!innerRingRef.current) return;
+      innerRingRef.current.dataset.cursorState = state;
+      innerRingRef.current.className = `border flex items-center justify-center transition-all duration-150 ease-out ${getInnerRingClass(state)} ${isClickingRef.current ? "scale-75" : ""}`;
+      if (lockIconRef.current) lockIconRef.current.style.display = state === "locked" ? "block" : "none";
+      if (dragIconRef.current) dragIconRef.current.style.display = state === "drag" ? "block" : "none";
+      if (viewIconRef.current) viewIconRef.current.style.display = state === "view" ? "block" : "none";
+      if (cursorLabelRef.current) {
+        cursorLabelRef.current.textContent = label;
+        cursorLabelRef.current.style.display = state === "button" && label ? "inline" : "none";
       }
-
-      // 3. Spotlight coordinates written in same frame cycle
-      document.documentElement.style.setProperty("--mx", `${x}px`);
-      document.documentElement.style.setProperty("--my", `${y}px`);
     };
 
     const renderLoop = (timestamp) => {
       if (!lastTimeRef.current) lastTimeRef.current = timestamp;
       const rawDt = (timestamp - lastTimeRef.current) / 1000;
-      const dt = Number.isFinite(rawDt) ? Math.min(Math.max(rawDt, 0.001), 0.05) : 0.016;
+      const dt = Number.isFinite(rawDt) ? Math.min(Math.max(rawDt, 0), 0.05) : 0.016;
       lastTimeRef.current = timestamp;
 
       if (
@@ -75,8 +82,8 @@ export const CustomCursor = memo(function CustomCursor() {
         return;
       }
 
-      // Frame-rate independent lerp: pos += (target - pos) * (1 - Math.exp(-dt * k)), k≈14
-      const k = 14;
+      // Frame-rate independent lerp: pos += (target - pos) * (1 - Math.exp(-dt * k)), k=18
+      const k = 18;
       const factor = 1 - Math.exp(-dt * k);
       const dx = target.current.x - ringPos.current.x;
       const dy = target.current.y - ringPos.current.y;
@@ -94,6 +101,16 @@ export const CustomCursor = memo(function CustomCursor() {
       if (ringWrapperRef.current) {
         ringWrapperRef.current.style.transform = `translate3d(${ringPos.current.x}px, ${ringPos.current.y}px, 0)`;
       }
+      if (dotWrapperRef.current) {
+        dotWrapperRef.current.style.transform = `translate3d(${target.current.x}px, ${target.current.y}px, 0)`;
+      }
+      if (rippleWrapperRef.current) {
+        rippleWrapperRef.current.style.transform = `translate3d(${target.current.x}px, ${target.current.y}px, 0)`;
+      }
+      if (spotlightRef.current) {
+        spotlightRef.current.style.transform = `translate3d(${target.current.x - 600}px, ${target.current.y - 600}px, 0)`;
+      }
+      if (hasFirstMove.current && pointerInside.current) setCursorVisible(true);
 
       // Idle stop condition (<0.05px for 500ms)
       if (Math.abs(dx) < 0.05 && Math.abs(dy) < 0.05) {
@@ -128,27 +145,22 @@ export const CustomCursor = memo(function CustomCursor() {
 
       target.current.x = x;
       target.current.y = y;
+      if (!pointerInside.current) pointerInside.current = true;
 
       // Initial placement: snap ring directly to cursor without fly-in from (0,0)
       if (!hasFirstMove.current) {
         hasFirstMove.current = true;
         ringPos.current.x = x;
         ringPos.current.y = y;
-        if (ringWrapperRef.current) {
-          ringWrapperRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-        }
-        setIsVisible(true);
-      } else if (!isVisible) {
-        setIsVisible(true);
       }
 
-      updatePosition(x, y);
       startLoop();
     };
 
     const onMouseDown = (e) => {
       if (e.pointerType && e.pointerType !== "mouse") return;
-      setIsClicking(true);
+      isClickingRef.current = true;
+      innerRingRef.current?.classList.add("scale-75");
       if (rippleWrapperRef.current) {
         const ripple = rippleWrapperRef.current.firstElementChild;
         if (ripple) {
@@ -162,9 +174,18 @@ export const CustomCursor = memo(function CustomCursor() {
       }
     };
 
-    const onMouseUp = () => setIsClicking(false);
-    const onPointerLeave = () => setIsVisible(false);
-    const onPointerEnter = () => setIsVisible(true);
+    const onMouseUp = () => {
+      isClickingRef.current = false;
+      innerRingRef.current?.classList.remove("scale-75");
+    };
+    const onPointerLeave = () => {
+      pointerInside.current = false;
+      setCursorVisible(false);
+    };
+    const onPointerEnter = () => {
+      pointerInside.current = true;
+      if (hasFirstMove.current) setCursorVisible(true);
+    };
 
     // Event delegation with cached comparison to avoid unnecessary state re-renders
     const onPointerOver = (e) => {
@@ -193,19 +214,37 @@ export const CustomCursor = memo(function CustomCursor() {
 
       if (nextState !== lastResolvedState.current) {
         lastResolvedState.current = nextState;
-        setCursorState(nextState);
-        setCursorLabel(nextLabel);
+        applyCursorState(nextState, nextLabel);
       }
+    };
+
+    const pauseLoop = () => {
+      if (rafId.current) {
+        cancelAnimationFrame(rafId.current);
+        rafId.current = null;
+      }
+      isLoopRunning.current = false;
     };
 
     const onVisibilityChange = () => {
       if (document.hidden) {
-        setIsVisible(false);
-        if (rafId.current) {
-          cancelAnimationFrame(rafId.current);
-          rafId.current = null;
-        }
-        isLoopRunning.current = false;
+        pointerInside.current = false;
+        setCursorVisible(false);
+        pauseLoop();
+      } else {
+        pointerInside.current = document.documentElement.matches(":hover");
+        if (hasFirstMove.current && pointerInside.current) setCursorVisible(true);
+      }
+    };
+    const onBlur = () => {
+      pointerInside.current = false;
+      setCursorVisible(false);
+      pauseLoop();
+    };
+    const onFocus = () => {
+      pointerInside.current = document.documentElement.matches(":hover");
+      if (hasFirstMove.current && pointerInside.current) {
+        setCursorVisible(true);
       }
     };
 
@@ -216,7 +255,8 @@ export const CustomCursor = memo(function CustomCursor() {
     document.documentElement.addEventListener("pointerenter", onPointerEnter);
     document.addEventListener("pointerover", onPointerOver, { passive: true });
     document.addEventListener("visibilitychange", onVisibilityChange);
-    window.addEventListener("blur", onPointerLeave);
+    window.addEventListener("blur", onBlur);
+    window.addEventListener("focus", onFocus);
 
     return () => {
       document.body.classList.remove("custom-cursor-active");
@@ -227,7 +267,8 @@ export const CustomCursor = memo(function CustomCursor() {
       document.documentElement.removeEventListener("pointerenter", onPointerEnter);
       document.removeEventListener("pointerover", onPointerOver);
       document.removeEventListener("visibilitychange", onVisibilityChange);
-      window.removeEventListener("blur", onPointerLeave);
+      window.removeEventListener("blur", onBlur);
+      window.removeEventListener("focus", onFocus);
       if (rafId.current) {
         cancelAnimationFrame(rafId.current);
         rafId.current = null;
@@ -246,9 +287,9 @@ export const CustomCursor = memo(function CustomCursor() {
     return null;
   }
 
-  // Inner ring styling based on cursorState
-  const getInnerRingClass = () => {
-    switch (cursorState) {
+  // Inner ring styling based on cursor state.
+  const getInnerRingClass = (state) => {
+    switch (state) {
       case "link":
         return "w-12 h-12 -ml-[24px] -mt-[24px] rounded-full border-primary/80 bg-primary/15 scale-110";
       case "button":
@@ -270,9 +311,8 @@ export const CustomCursor = memo(function CustomCursor() {
 
   return (
     <div
-      className={`pointer-events-none fixed inset-0 z-[100] transition-opacity duration-200 ${
-        isVisible ? "opacity-100" : "opacity-0"
-      }`}
+      ref={cursorRootRef}
+      className="pointer-events-none fixed inset-0 z-[100] transition-opacity duration-200 opacity-0"
       aria-hidden="true"
     >
       {/* 1. Instant Dot Outer Wrapper (Fixed position, translate3d in rAF) */}
@@ -299,18 +339,13 @@ export const CustomCursor = memo(function CustomCursor() {
       >
         {/* Inner Morphable Shape (CSS classes & transitions handle shape/scale) */}
         <div
-          className={`border flex items-center justify-center transition-all duration-150 ease-out ${getInnerRingClass()} ${
-            isClicking ? "scale-75" : ""
-          }`}
+          ref={innerRingRef}
+          className={`border flex items-center justify-center transition-all duration-150 ease-out ${getInnerRingClass("default")}`}
         >
-          {cursorState === "locked" && <Lock className="w-3.5 h-3.5" />}
-          {cursorState === "drag" && <MoveHorizontal className="w-4 h-4" />}
-          {cursorState === "view" && <Eye className="w-4 h-4" />}
-          {cursorState === "button" && cursorLabel && (
-            <span className="font-mono text-[9px] text-white tracking-widest uppercase font-bold">
-              {cursorLabel}
-            </span>
-          )}
+          <Lock ref={lockIconRef} className="w-3.5 h-3.5" style={{ display: "none" }} />
+          <MoveHorizontal ref={dragIconRef} className="w-4 h-4" style={{ display: "none" }} />
+          <Eye ref={viewIconRef} className="w-4 h-4" style={{ display: "none" }} />
+          <span ref={cursorLabelRef} className="font-mono text-[9px] text-white tracking-widest uppercase font-bold" style={{ display: "none" }} />
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { motion } from "motion/react";
 import { MOTION_EASE } from "../../lib/motion.js";
 import { shouldUseStaticPointerEffects } from "../../lib/motion.js";
@@ -19,7 +19,6 @@ export function SpotlightCard({
   const spotlightRef = useRef(null);
   const staticEffects = shouldUseStaticPointerEffects();
   const boundsRef = usePointerBounds(cardRef, !staticEffects);
-  const [isHovered, setIsHovered] = useState(false);
 
   const handleMouseMove = (e) => {
     const rect = boundsRef.current;
@@ -29,11 +28,22 @@ export function SpotlightCard({
     spotlightRef.current.style.background = `radial-gradient(400px circle at ${x}px ${y}px, ${spotlightColor}, transparent 70%)`;
   };
 
-  const handleMouseEnter = () => setIsHovered(true);
+  const handleMouseEnter = () => {
+    if (cardRef.current) {
+      const rect = cardRef.current.getBoundingClientRect();
+      boundsRef.current = {
+        left: rect.left + window.scrollX,
+        top: rect.top + window.scrollY,
+        width: rect.width,
+        height: rect.height,
+      };
+    }
+    if (spotlightRef.current) spotlightRef.current.style.display = "block";
+  };
 
   const handleMouseLeave = () => {
     boundsRef.current = null;
-    setIsHovered(false);
+    if (spotlightRef.current) spotlightRef.current.style.display = "none";
   };
 
   return (
@@ -49,11 +59,12 @@ export function SpotlightCard({
       {...props}
     >
       {/* Dynamic Cursor Spotlight Layer */}
-      {!staticEffects && isHovered && (
+      {!staticEffects && (
         <div
           ref={spotlightRef}
           className="pointer-events-none absolute -inset-px transition-opacity duration-300"
           style={{
+            display: "none",
             background: `radial-gradient(400px circle at -200px -200px, ${spotlightColor}, transparent 70%)`,
           }}
           aria-hidden="true"

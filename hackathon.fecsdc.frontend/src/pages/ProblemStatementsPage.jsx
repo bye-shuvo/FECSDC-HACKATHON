@@ -16,10 +16,8 @@ export default function ProblemStatementsPage() {
 
   const { isLocked, revealDate } = useProblemLock();
   // Optional developer override to test unlocked view without waiting for live date
-  const [overrideUnlock, setOverrideUnlock] = useState(false);
-  const [selectedTrack, setSelectedTrack] = useState("All");
 
-  const showLocked = isLocked && !overrideUnlock;
+  const [selectedTrack, setSelectedTrack] = useState("All");
 
   const filteredProblems = problems.filter((p) => {
     return selectedTrack === "All" || p.track === selectedTrack;
@@ -39,24 +37,8 @@ export default function ProblemStatementsPage() {
           ]}
         />
 
-        {/* Development preview toggle */}
-        {isLocked && (
-          <div className="flex justify-end mb-6">
-            <button
-              type="button"
-              onClick={() => setOverrideUnlock((prev) => !prev)}
-              data-cursor="button"
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-border bg-card/80 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors"
-              title="Toggle preview to test unlocked problem statement rendering"
-            >
-              {overrideUnlock ? <Lock className="w-3.5 h-3.5 text-primary" /> : <Unlock className="w-3.5 h-3.5 text-accent-amber" />}
-              <span>{overrideUnlock ? "View Locked State" : "Preview Unlocked (Testing)"}</span>
-            </button>
-          </div>
-        )}
-
         {/* If locked, display LockedState with countdown */}
-        {showLocked ? (
+        {isLocked ? (
           <Reveal>
             <LockedState revealDate={revealDate} />
           </Reveal>

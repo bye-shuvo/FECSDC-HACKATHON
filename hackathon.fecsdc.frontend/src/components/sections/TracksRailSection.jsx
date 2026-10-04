@@ -115,16 +115,16 @@ export function TracksRailSection() {
         onMouseUp={handleMouseUp}
         onMouseMove={handleMouseMove}
         data-cursor="drag"
-        className="flex gap-6 items-center justify-center overflow-x-auto no-scrollbar px-4 sm:px-6 lg:px-8 py-4 snap-x snap-mandatory cursor-grab active:cursor-grabbing max-w-7xl mx-auto"
+        className="flex flex-col md:flex-row gap-6 items-center justify-center overflow-x-auto no-scrollbar px-4 sm:px-6 lg:px-8 py-4 snap-x snap-mandatory cursor-grab active:cursor-grabbing max-w-7xl mx-auto"
       >
         {railTracks.map((track) => {
           const Icon = track.icon;
           return (
             <div
               key={track.id}
-              className="snap-start shrink-0 w-[300px] sm:w-[340px] md:w-[380px] h-[360px]"
+              className="snap-start shrink-0 w-75 sm:w-85 md:w-95 h-90"
             >
-              <TiltCard maxTilt={6} className="p-6 flex flex-col justify-between h-full bg-card border-border">
+              <TiltCard maxTilt={6} className="p-6 flex md:flex-col justify-between h-full bg-card border-border">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="w-10 h-10 rounded-sm bg-muted border border-border flex items-center justify-center text-primary">

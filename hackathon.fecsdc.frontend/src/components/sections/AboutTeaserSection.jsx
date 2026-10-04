@@ -28,37 +28,37 @@ export function AboutTeaserSection() {
         </div>
 
         {/* Asymmetric Bento Grid */}
-        <BentoGrid>
+        <BentoGrid className="auto-rows-[minmax(220px,auto)] md:auto-rows-55">
           {/* Main Large Feature Block (Col Span 2, Row Span 2) */}
-          <BentoItem colSpan="md:col-span-2" rowSpan="row-span-2">
-            <TiltCard className="p-8 flex flex-col justify-between h-full bg-card/90 border-border">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
+          <BentoItem colSpan="md:col-span-2" rowSpan="row-span-2 md:row-span-2">
+            <TiltCard className="flex h-full w-full min-w-0 flex-col justify-between bg-card/90 border-border p-7 sm:p-6 md:p-8">
+              <div className="w-full min-w-0 space-y-4">
+                <div className="flex min-w-0 items-center justify-between gap-3">
                   <div className="w-12 h-12 rounded-sm bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
                     <Terminal className="w-6 h-6" />
                   </div>
-                  <Badge variant="primary" size="sm">
+                  <Badge variant="primary" size="sm" className="shrink-0">
                     SANCTUARY
                   </Badge>
                 </div>
 
-                <h3 className="text-2xl font-bold text-foreground">
+                <h3 className="min-w-0 break-words text-xl sm:text-2xl font-bold text-foreground">
                   6-Hour Deep Engineering Sprint
                 </h3>
 
-                <p className="text-sm text-muted-foreground leading-relaxed">
+                <p className="min-w-0 break-words text-sm text-muted-foreground leading-relaxed">
                   A beginner-friendly coding sprint at the FEC Campus where participants learn HTML, CSS, JavaScript, and problem-solving while building web projects, improving confidence, and turning ideas into working solutions.
                 </p>
 
-                <div className="p-4 rounded-sm bg-muted/60 border border-border/80 text-xs font-mono text-foreground/80 space-y-1">
+                <div className="w-full min-w-0 max-w-full p-3 sm:p-4 rounded-sm bg-muted/60 border border-border/80 text-[11px] sm:text-xs font-mono text-foreground/80 space-y-1">
                   <div>// FEC SDC Environment Rule</div>
-                  <div className="text-primary font-bold">git checkout -b hackathon-main</div>
+                  <div className="text-primary font-bold break-all">git checkout -b hackathon-main</div>
                   <div className="text-muted-foreground"># Fresh repo creation upon event opening</div>
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-border/40 flex items-center justify-between text-xs font-mono text-muted-foreground">
-                <span>Online Event • Time Constraints</span>
+              <div className="mt-5 pt-4 sm:pt-6 border-t border-border/40 flex min-w-0 flex-wrap items-center justify-between gap-2 text-[11px] sm:text-xs font-mono text-muted-foreground">
+                <span className="min-w-0 break-words">Online Event • Time Constraints</span>
                 <PillMark size="sm" />
               </div>
             </TiltCard>

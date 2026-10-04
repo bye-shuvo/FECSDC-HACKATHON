@@ -129,11 +129,13 @@ export function BackgroundScene({ variant = "content" }) {
         ))}
       </div>
 
-      {/* 4. Global Cursor Spotlight (Synchronized via CSS vars --mx --my) */}
+      {/* 4. Compositor-translated global cursor spotlight */}
       <div
-        className="absolute inset-0 transition-opacity duration-300"
+        id="background-cursor-spotlight"
+        className="pointer-events-none absolute left-0 top-0 h-[1200px] w-[1200px] will-change-transform"
         style={{
-          background: `radial-gradient(600px circle at var(--mx, -200px) var(--my, -200px), rgba(244, 123, 48, 0.07), transparent 60%)`,
+          transform: "translate3d(-700px, -700px, 0)",
+          background: "radial-gradient(600px circle at 50% 50%, rgba(244, 123, 48, 0.07), transparent 60%)",
         }}
       />
 
