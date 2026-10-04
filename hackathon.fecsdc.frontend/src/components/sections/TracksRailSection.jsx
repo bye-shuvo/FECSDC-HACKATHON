@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { Link } from "react-router";
 import { ArrowRight, Cpu, Terminal, Shield, Sparkles, ChevronRight, ChevronLeft } from "lucide-react";
 import { Section, Container } from "../ui/Section.jsx";
@@ -47,26 +47,23 @@ const railTracks = [{
 
 export function TracksRailSection() {
   const scrollRef = useRef(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
+  const dragRef = useRef({ startX: 0, scrollLeft: 0, isDragging: false });
 
   const handleMouseDown = (e) => {
     if (!scrollRef.current) return;
-    setIsDragging(true);
-    setStartX(e.pageX - scrollRef.current.offsetLeft);
-    setScrollLeft(scrollRef.current.scrollLeft);
+    dragRef.current.isDragging = true;
+    dragRef.current.startX = e.pageX;
+    dragRef.current.scrollLeft = scrollRef.current.scrollLeft;
   };
 
-  const handleMouseLeave = () => setIsDragging(false);
-  const handleMouseUp = () => setIsDragging(false);
+  const handleMouseLeave = () => { dragRef.current.isDragging = false; };
+  const handleMouseUp = () => { dragRef.current.isDragging = false; };
 
   const handleMouseMove = (e) => {
-    if (!isDragging || !scrollRef.current) return;
+    if (!dragRef.current.isDragging || !scrollRef.current) return;
     e.preventDefault();
-    const x = e.pageX - scrollRef.current.offsetLeft;
-    const walk = (x - startX) * 1.5;
-    scrollRef.current.scrollLeft = scrollLeft - walk;
+    const walk = (e.pageX - dragRef.current.startX) * 1.5;
+    scrollRef.current.scrollLeft = dragRef.current.scrollLeft - walk;
   };
 
   const scrollByAmount = (offset) => {

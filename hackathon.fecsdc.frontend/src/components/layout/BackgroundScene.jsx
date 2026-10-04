@@ -1,7 +1,18 @@
 import { useEffect, useRef } from "react";
 import { useScroll, useTransform, motion } from "motion/react";
 import { animate, stagger } from "animejs";
-import { shouldReduceMotion } from "../../lib/motion.js";
+import { shouldReduceMotion, shouldUseStaticPointerEffects } from "../../lib/motion.js";
+import { useSharedInView } from "../../hooks/useSharedInView.js";
+
+const pills = [
+  { top: "8%", left: "5%", width: "160px", height: "14px", color: "var(--primary)" },
+  { top: "16%", left: "70%", width: "200px", height: "18px", color: "var(--accent-amber)" },
+  { top: "32%", left: "12%", width: "120px", height: "12px", color: "var(--brand-slate)" },
+  { top: "48%", left: "80%", width: "180px", height: "16px", color: "var(--primary)" },
+  { top: "62%", left: "18%", width: "140px", height: "14px", color: "var(--accent-amber)" },
+  { top: "78%", left: "75%", width: "220px", height: "18px", color: "var(--brand-slate)" },
+  { top: "88%", left: "30%", width: "150px", height: "12px", color: "var(--primary)" },
+];
 
 /**
  * BackgroundScene Component
@@ -12,21 +23,30 @@ import { shouldReduceMotion } from "../../lib/motion.js";
  * - 'results': floating confetti-lite pill particles
  */
 export function BackgroundScene({ variant = "content" }) {
-  const containerRef = useRef(null);
+  const [containerRef, isInView] = useSharedInView({ once: false });
   const pillFieldRef = useRef(null);
   const animRef = useRef(null);
+  const isInViewRef = useRef(isInView);
+  const staticEffects = shouldUseStaticPointerEffects();
 
   const { scrollY } = useScroll();
   // Faint parallax 0.05 on scroll
   const gridY = useTransform(scrollY, [0, 2000], [0, 100]);
 
   useEffect(() => {
-    if (shouldReduceMotion() || !pillFieldRef.current) return;
+    if (
+      shouldReduceMotion() ||
+      !pillFieldRef.current ||
+      (staticEffects && variant === "landing")
+    ) return;
 
-    const pills = pillFieldRef.current.querySelectorAll(".bg-pill-bar");
-    if (!pills.length) return;
+    const pillElements = pillFieldRef.current.querySelectorAll(".bg-pill-bar");
+    const animatedPills = staticEffects
+      ? Array.from(pillElements).slice(0, 3)
+      : pillElements;
+    if (!animatedPills.length) return;
 
-    animRef.current = animate(pills, {
+    animRef.current = animate(animatedPills, {
       translateX: [-18, 18],
       translateY: [-10, 10],
       opacity: [0.08, 0.18],
@@ -34,62 +54,31 @@ export function BackgroundScene({ variant = "content" }) {
       duration: 5200,
       alternate: true,
       loop: true,
+      autoplay: false,
       ease: "inOutSine",
     });
+    if (isInViewRef.current && !document.hidden) animRef.current.play();
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!animRef.current) return;
-          if (entry.isIntersecting && !document.hidden) {
-            animRef.current.play();
-          } else {
-            animRef.current.pause();
-          }
-        });
-      },
-      { threshold: 0.05 }
-    );
-
-    if (containerRef.current) {
-      observer.observe(containerRef.current);
-    }
-
-    // Pause animation when tab is hidden, resume when visible
     const onVisibilityChange = () => {
       if (!animRef.current) return;
-      if (document.hidden) {
-        animRef.current.pause();
-      } else {
-        // Only resume if the element is in view
-        if (containerRef.current) {
-          const rect = containerRef.current.getBoundingClientRect();
-          const inView =
-            rect.bottom > 0 && rect.top < window.innerHeight;
-          if (inView) animRef.current.play();
-        }
-      }
+      if (document.hidden || !isInViewRef.current) animRef.current.pause();
+      else animRef.current.play();
     };
 
     document.addEventListener("visibilitychange", onVisibilityChange);
 
     return () => {
-      observer.disconnect();
       document.removeEventListener("visibilitychange", onVisibilityChange);
       if (animRef.current && animRef.current.pause) animRef.current.pause();
     };
-  }, [variant]);
+  }, [staticEffects, variant]);
 
-  // Pill positions for the field
-  const pills = [
-    { top: "8%", left: "5%", width: "160px", height: "14px", color: "var(--primary)" },
-    { top: "16%", left: "70%", width: "200px", height: "18px", color: "var(--accent-amber)" },
-    { top: "32%", left: "12%", width: "120px", height: "12px", color: "var(--brand-slate)" },
-    { top: "48%", left: "80%", width: "180px", height: "16px", color: "var(--primary)" },
-    { top: "62%", left: "18%", width: "140px", height: "14px", color: "var(--accent-amber)" },
-    { top: "78%", left: "75%", width: "220px", height: "18px", color: "var(--brand-slate)" },
-    { top: "88%", left: "30%", width: "150px", height: "12px", color: "var(--primary)" },
-  ];
+  useEffect(() => {
+    isInViewRef.current = isInView;
+    if (!animRef.current) return;
+    if (isInView && !document.hidden) animRef.current.play();
+    else animRef.current.pause();
+  }, [isInView]);
 
   return (
     <div

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { animate, stagger } from "animejs";
-import { shouldReduceMotion } from "../../lib/motion.js";
+import { shouldReduceMotion, shouldUseStaticPointerEffects } from "../../lib/motion.js";
+import { useSharedInView } from "../../hooks/useSharedInView.js";
 
 /**
  * Hero Pill Bar Choreography Background
@@ -8,17 +9,22 @@ import { shouldReduceMotion } from "../../lib/motion.js";
  * Pauses when offscreen or when reduced motion is preferred.
  */
 export function HeroPillBackground() {
-  const containerRef = useRef(null);
+  const [containerRef, isInView] = useSharedInView({ once: false });
   const animRef = useRef(null);
+  const isInViewRef = useRef(isInView);
+  const staticEffects = shouldUseStaticPointerEffects();
 
   useEffect(() => {
     if (shouldReduceMotion() || !containerRef.current) return;
 
     const pills = containerRef.current.querySelectorAll(".hero-drift-pill");
     if (!pills || !pills.length) return;
+    const animatedPills = staticEffects
+      ? Array.from(pills).slice(0, 3)
+      : pills;
 
     // Anime.js staggered floating drift
-    animRef.current = animate(pills, {
+    animRef.current = animate(animatedPills, {
       translateY: [-12, 12],
       translateX: [-8, 8],
       opacity: [0.12, 0.26],
@@ -26,33 +32,32 @@ export function HeroPillBackground() {
       duration: 4800,
       alternate: true,
       loop: true,
+      autoplay: false,
       ease: "inOutQuad",
     });
+    if (isInViewRef.current && !document.hidden) animRef.current.play();
 
-    // IntersectionObserver to pause loop when offscreen
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!animRef.current) return;
-          if (entry.isIntersecting) {
-            animRef.current.play();
-          } else {
-            animRef.current.pause();
-          }
-        });
-      },
-      { threshold: 0.05 }
-    );
-
-    observer.observe(containerRef.current);
+    const onVisibilityChange = () => {
+      if (!animRef.current) return;
+      if (document.hidden || !isInViewRef.current) animRef.current.pause();
+      else animRef.current.play();
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     return () => {
-      observer.disconnect();
+      document.removeEventListener("visibilitychange", onVisibilityChange);
       if (animRef.current && animRef.current.pause) {
         animRef.current.pause();
       }
     };
-  }, []);
+  }, [staticEffects]);
+
+  useEffect(() => {
+    isInViewRef.current = isInView;
+    if (!animRef.current) return;
+    if (isInView && !document.hidden) animRef.current.play();
+    else animRef.current.pause();
+  }, [isInView]);
 
   // Preset pill configurations: distinct coordinates, lengths, and colors
   const pills = [

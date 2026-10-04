@@ -10,7 +10,6 @@ import { PageTransition } from "../components/motion/PageTransition.jsx";
 import { SiteLoader } from "../components/motion/SiteLoader.jsx";
 import { RouteTransition } from "../components/motion/RouteTransition.jsx";
 import { LoaderProvider } from "../hooks/useLoaderDone.js";
-import { useIdlePrefetchTopRoutes } from "../hooks/usePrefetchRoute.js";
 import { ErrorBoundaryClass } from "../components/layout/ErrorBoundary.jsx";
 
 function LayoutContent() {
@@ -21,9 +20,6 @@ function LayoutContent() {
     damping: 30,
     restDelta: 0.001,
   });
-
-  // Automatically prefetch top routes on idle
-  useIdlePrefetchTopRoutes();
 
   // Determine background layer variant per active route
   const getBackgroundVariant = () => {
@@ -51,14 +47,14 @@ function LayoutContent() {
       {/* 4. Accessibility Skip Link */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 z-[999] px-4 py-2 bg-primary text-white font-mono text-sm rounded shadow-lg focus:outline-none"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 z-999 px-4 py-2 bg-primary text-white font-mono text-sm rounded shadow-lg focus:outline-none"
       >
         Skip to main content
       </a>
 
       {/* 5. 2px Gradient Scroll Progress Bar at the very top */}
       <motion.div
-        className="fixed top-0 left-0 right-0 h-[2.5px] gradient-bg-brand z-[60] origin-left"
+        className="fixed top-0 left-0 right-0 h-[2.5px] gradient-bg-brand z-60 origin-left"
         style={{ scaleX }}
       />
 

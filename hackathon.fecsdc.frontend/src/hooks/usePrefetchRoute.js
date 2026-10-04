@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { prefetch } from "../lib/api.js";
 import { siteConfig } from "../data/siteConfig.js";
-import { useLoaderDone } from "./useLoaderDone.js";
 
 // Route path to dynamic import module map
 const routeLoaders = {
@@ -48,42 +47,6 @@ export function prefetchQuestionsData() {
   if (siteConfig.questionsEndpoint) {
     prefetch(siteConfig.questionsEndpoint, { ttl: 5 * 60 * 1000, persist: true });
   }
-}
-
-/**
- * Hook to prefetch top priority routes on browser idle
- */
-export function useIdlePrefetchTopRoutes() {
-  const { isLoaderDone } = useLoaderDone();
-
-  useEffect(() => {
-    if (!isLoaderDone) return;
-    const topRoutes = [
-      "/",
-      "/hackathon/register",
-      "/hackathon/rules",
-      "/hackathon/schedule",
-      "/hackathon/submit",
-    ];
-
-    const runPrefetch = () => {
-      topRoutes.forEach((route) => {
-        prefetchRoute(route);
-      });
-      // Also warm the questions cache on idle
-      prefetchQuestionsData();
-    };
-
-    if (typeof window !== "undefined") {
-      if ("requestIdleCallback" in window) {
-        const id = window.requestIdleCallback(runPrefetch, { timeout: 3000 });
-        return () => window.cancelIdleCallback(id);
-      } else {
-        const timer = setTimeout(runPrefetch, 1500);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [isLoaderDone]);
 }
 
 /**

@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
 import { motion } from "motion/react";
 import { MOTION_EASE } from "../../lib/motion.js";
-import { useReducedMotion } from "../../hooks/useReducedMotion.js";
+import { shouldUseStaticPointerEffects } from "../../lib/motion.js";
+import { usePointerBounds } from "../../hooks/usePointerBounds.js";
 
 /**
  * SpotlightCard
@@ -16,42 +17,49 @@ export function SpotlightCard({
   ...props
 }) {
   const cardRef = useRef(null);
-  const [mousePos, setMousePos] = useState({ x: -200, y: -200 });
+  const spotlightRef = useRef(null);
+  const staticEffects = shouldUseStaticPointerEffects();
+  const boundsRef = usePointerBounds(cardRef, !staticEffects);
   const [isHovered, setIsHovered] = useState(false);
-  const prefersReduced = useReducedMotion();
 
   const handleMouseMove = (e) => {
-    if (prefersReduced || !cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    setMousePos({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    });
+    const rect = boundsRef.current;
+    if (!rect || !spotlightRef.current) return;
+    const x = e.pageX - rect.left;
+    const y = e.pageY - rect.top;
+    spotlightRef.current.style.background = `radial-gradient(350px circle at ${x}px ${y}px, ${spotlightColor}, transparent 70%)`;
+  };
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    boundsRef.current = null;
+    setIsHovered(false);
   };
 
   return (
     <motion.div
       ref={cardRef}
       data-cursor="card"
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => {
-        setIsHovered(false);
-        setMousePos({ x: -200, y: -200 });
-      }}
-      whileHover={prefersReduced ? {} : { y: -4 }}
-      whileTap={{ scale: 0.98 }}
+      onMouseMove={staticEffects ? undefined : handleMouseMove}
+      onMouseEnter={staticEffects ? undefined : handleMouseEnter}
+      onMouseLeave={staticEffects ? undefined : handleMouseLeave}
+      whileHover={staticEffects ? undefined : { y: -4 }}
+      whileTap={staticEffects ? undefined : { scale: 0.98 }}
       transition={{ duration: 0.2, ease: MOTION_EASE }}
       onClick={onClick}
       className={`relative overflow-hidden rounded-sm border border-border bg-card transition-colors duration-200 hover:border-primary focus-visible:outline-2 focus-visible:outline-ring ${className}`}
       {...props}
     >
       {/* Dynamic Cursor Spotlight Layer */}
-      {!prefersReduced && isHovered && (
+      {!staticEffects && isHovered && (
         <div
+          ref={spotlightRef}
           className="pointer-events-none absolute -inset-px transition-opacity duration-300"
           style={{
-            background: `radial-gradient(350px circle at ${mousePos.x}px ${mousePos.y}px, ${spotlightColor}, transparent 70%)`,
+            background: `radial-gradient(350px circle at -200px -200px, ${spotlightColor}, transparent 70%)`,
           }}
           aria-hidden="true"
         />

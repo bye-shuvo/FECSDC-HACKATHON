@@ -341,7 +341,7 @@ export function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.25, ease: MOTION_EASE }}
-            className="fixed inset-0 top-16 bg-background/98 backdrop-blur-2xl z-40 flex flex-col justify-between p-6 overflow-y-auto md:hidden border-t border-border"
+            className="fixed inset-0 top-16 bg-background/98 backdrop-blur-2xl z-40 flex flex-col justify-between p-6 overflow-y-auto md:hidden border-t border-border h-[92dvh]"
             role="dialog"
             aria-modal="true"
           >
@@ -390,13 +390,13 @@ export function Navbar() {
                   Challenges
                 </Link>
 
-                <Link
+                {/* <Link
                   to="/sponsors"
                   onClick={() => setMobileOpen(false)}
                   className="font-display text-xl font-bold py-2 border-b border-border/40 hover:text-primary transition-colors"
                 >
                   Sponsors
-                </Link>
+                </Link> */}
 
                 <Link
                   to="/results"

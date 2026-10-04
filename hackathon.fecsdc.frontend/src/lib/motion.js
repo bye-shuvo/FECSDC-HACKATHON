@@ -1,11 +1,13 @@
 /**
  * Motion configuration, easing functions, spring presets, and animation helpers.
  */
+import { cubicBezier } from "animejs";
 
 // Custom cubic-bezier easing: out-expo style (fast start, silky deceleration)
 export const MOTION_EASE = [0.22, 1, 0.36, 1];
 export const MOTION_EASE_EXPO = [0.16, 1, 0.3, 1];
 export const MOTION_EASE_FAST = [0.4, 0, 0.2, 1];
+export const ANIME_EASE_EXPO = cubicBezier(...MOTION_EASE_EXPO);
 
 // Consistent spring configuration across interactive elements
 export const MOTION_SPRING = {
@@ -96,4 +98,18 @@ export const staggerContainerVariants = {
 export function shouldReduceMotion() {
   if (typeof window === "undefined") return false;
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+export function shouldUseStaticPointerEffects() {
+  if (typeof window === "undefined") return true;
+
+  const { hardwareConcurrency, deviceMemory, connection } = window.navigator;
+  return (
+    shouldReduceMotion() ||
+    window.matchMedia("(pointer: coarse)").matches ||
+    window.matchMedia("(any-pointer: coarse)").matches ||
+    (Number.isFinite(hardwareConcurrency) && hardwareConcurrency <= 4) ||
+    (Number.isFinite(deviceMemory) && deviceMemory <= 4) ||
+    connection?.saveData === true
+  );
 }

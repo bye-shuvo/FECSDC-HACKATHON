@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { animate, createTimeline, stagger } from "animejs";
 import { useLoaderDone } from "../../hooks/useLoaderDone.js";
-import { LOADER_TIMINGS, shouldReduceMotion } from "../../lib/motion.js";
+import { ANIME_EASE_EXPO, LOADER_TIMINGS, shouldReduceMotion } from "../../lib/motion.js";
 
 const TEXT = "hackathon fecsdc";
 
@@ -112,7 +112,7 @@ export function SiteLoader() {
         animate(containerRef.current, {
           translateY: [0, "-100%"],
           duration: 600,
-          ease: "cubicBezier(0.16, 1, 0.3, 1)",
+          ease: ANIME_EASE_EXPO,
           onComplete: () => {
             if (isMounted) {
               document.body.style.overflow = originalOverflow;

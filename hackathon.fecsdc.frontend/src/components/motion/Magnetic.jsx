@@ -1,7 +1,8 @@
-import { useRef, useState } from "react";
-import { motion } from "motion/react";
+import { useRef } from "react";
+import { motion, useMotionValue, useSpring } from "motion/react";
 import { MOTION_SPRING_SNAPPY } from "../../lib/motion.js";
-import { useReducedMotion } from "../../hooks/useReducedMotion.js";
+import { shouldUseStaticPointerEffects } from "../../lib/motion.js";
+import { usePointerBounds } from "../../hooks/usePointerBounds.js";
 
 /**
  * Magnetic component
@@ -9,39 +10,47 @@ import { useReducedMotion } from "../../hooks/useReducedMotion.js";
  */
 export function Magnetic({ children, strength = 0.25, className = "" }) {
   const ref = useRef(null);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const prefersReduced = useReducedMotion();
+  const staticEffects = shouldUseStaticPointerEffects();
+  const boundsRef = usePointerBounds(ref, !staticEffects);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const springX = useSpring(x, MOTION_SPRING_SNAPPY);
+  const springY = useSpring(y, MOTION_SPRING_SNAPPY);
 
-  if (prefersReduced) {
+  if (staticEffects) {
     return <div className={className}>{children}</div>;
   }
 
+  const handleMouseEnter = () => {
+    if (ref.current) boundsRef.current = ref.current.getBoundingClientRect();
+  };
+
   const handleMouseMove = (e) => {
-    if (!ref.current) return;
+    if (!boundsRef.current) return;
     const { clientX, clientY } = e;
-    const { left, top, width, height } = ref.current.getBoundingClientRect();
+    const { left, top, width, height } = boundsRef.current;
     const centerX = left + width / 2;
     const centerY = top + height / 2;
     const distanceX = clientX - centerX;
     const distanceY = clientY - centerY;
 
-    setPosition({
-      x: distanceX * strength,
-      y: distanceY * strength,
-    });
+    x.set(distanceX * strength);
+    y.set(distanceY * strength);
   };
 
   const handleMouseLeave = () => {
-    setPosition({ x: 0, y: 0 });
+    boundsRef.current = null;
+    x.set(0);
+    y.set(0);
   };
 
   return (
     <motion.div
       ref={ref}
+      onMouseEnter={handleMouseEnter}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      animate={{ x: position.x, y: position.y }}
-      transition={MOTION_SPRING_SNAPPY}
+      style={{ x: springX, y: springY }}
       className={className}
     >
       {children}

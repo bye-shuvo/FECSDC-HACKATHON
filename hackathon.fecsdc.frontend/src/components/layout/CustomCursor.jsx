@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, memo } from "react";
 import { Lock, MoveHorizontal, Eye } from "lucide-react";
-import { shouldReduceMotion } from "../../lib/motion.js";
+import { shouldUseStaticPointerEffects } from "../../lib/motion.js";
 
 /**
  * CustomCursor Component
@@ -36,9 +36,7 @@ export const CustomCursor = memo(function CustomCursor() {
     const finePointer =
       window.matchMedia("(pointer: fine)").matches ||
       window.matchMedia("(any-pointer: fine)").matches;
-    const reducedMotion = shouldReduceMotion();
-
-    if (!finePointer || reducedMotion) {
+    if (!finePointer || shouldUseStaticPointerEffects()) {
       document.body.classList.remove("custom-cursor-active");
       return;
     }
@@ -243,7 +241,7 @@ export const CustomCursor = memo(function CustomCursor() {
     typeof window !== "undefined" &&
     (!window.matchMedia("(pointer: fine)").matches &&
       !window.matchMedia("(any-pointer: fine)").matches ||
-      shouldReduceMotion())
+      shouldUseStaticPointerEffects())
   ) {
     return null;
   }

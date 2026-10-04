@@ -101,7 +101,7 @@ export function HeroSection() {
               variant="primary"
               size="lg"
               icon={ArrowRight}
-              className="w-full sm:w-auto min-w-[200px]"
+              className="w-full sm:w-auto min-w-50"
               data-cursor="button"
               data-cursor-label="GO"
             >
