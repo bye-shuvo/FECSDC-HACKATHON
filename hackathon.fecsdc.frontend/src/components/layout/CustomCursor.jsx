@@ -1,18 +1,25 @@
 import { useEffect, useRef, memo } from "react";
 import { Lock, MoveHorizontal, Eye } from "lucide-react";
+import { isHighTier } from "../../hooks/useDeviceTier.js";
 import { shouldUseStaticPointerEffects } from "../../lib/motion.js";
 
 /**
  * CustomCursor Component
- * Dual-layer cursor with zero jitter:
+ * High-tier only dual-layer cursor with zero jitter:
  * - Direct target dot (no lerp)
- * - Frame-rate independent lerp ring with k≈14
- * - Complete separation of JS translate3d (outer wrapper) from CSS morph/scale (inner element)
- * - Cached sizes, single rAF loop with idle shutdown (<0.05px for 500ms)
- * - Respects (pointer: fine) and prefers-reduced-motion
+ * - Frame-rate independent lerp ring with k≈18
+ * - Pure ref writes on pointermove with single rAF loop
+ * - translate3d with no transition on outer elements, no blend/filter on ring
+ * - Idle shutdown (<0.05px for 500ms), stops on visibilitychange / tab hidden
+ * - Mid tier uses CSS image cursor; low tier mounts nothing (native cursor)
  */
 export const CustomCursor = memo(function CustomCursor() {
+  if (!isHighTier()) {
+    return null;
+  }
+
   const cursorRootRef = useRef(null);
+
   const dotWrapperRef = useRef(null);
   const ringWrapperRef = useRef(null);
   const innerRingRef = useRef(null);
@@ -325,7 +332,6 @@ export const CustomCursor = memo(function CustomCursor() {
       >
         <div
           className="w-1.5 h-1.5 -ml-[3px] -mt-[3px] rounded-full bg-primary"
-          style={{ mixBlendMode: "difference" }}
         />
       </div>
 

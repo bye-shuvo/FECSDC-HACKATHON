@@ -2,12 +2,18 @@
  * Motion configuration, easing functions, spring presets, and animation helpers.
  */
 import { cubicBezier } from "animejs";
+import { isLowTier } from "../hooks/useDeviceTier.js";
 
 // Custom cubic-bezier easing: out-expo style (fast start, silky deceleration)
 export const MOTION_EASE = [0.22, 1, 0.36, 1];
 export const MOTION_EASE_EXPO = [0.16, 1, 0.3, 1];
 export const MOTION_EASE_FAST = [0.4, 0, 0.2, 1];
-export const ANIME_EASE_EXPO = cubicBezier(...MOTION_EASE_EXPO);
+
+// Shared anime.js v4 cubicBezier easing functions (replaces string eases across codebase)
+export const ANIME_EASE_EXPO = cubicBezier(0.16, 1, 0.3, 1);
+export const ANIME_EASE_IN_OUT_SINE = cubicBezier(0.37, 0, 0.63, 1);
+export const ANIME_EASE_IN_OUT_QUAD = cubicBezier(0.45, 0, 0.55, 1);
+export const ANIME_EASE_OUT_QUAD = cubicBezier(0.25, 1, 0.5, 1);
 
 // Consistent spring configuration across interactive elements
 export const MOTION_SPRING = {
@@ -102,14 +108,6 @@ export function shouldReduceMotion() {
 
 export function shouldUseStaticPointerEffects() {
   if (typeof window === "undefined") return true;
-
-  const { hardwareConcurrency, deviceMemory, connection } = window.navigator;
-  return (
-    shouldReduceMotion() ||
-    window.matchMedia("(pointer: coarse)").matches ||
-    window.matchMedia("(any-pointer: coarse)").matches ||
-    (Number.isFinite(hardwareConcurrency) && hardwareConcurrency <= 4) ||
-    (Number.isFinite(deviceMemory) && deviceMemory <= 4) ||
-    connection?.saveData === true
-  );
+  return isLowTier();
 }
+

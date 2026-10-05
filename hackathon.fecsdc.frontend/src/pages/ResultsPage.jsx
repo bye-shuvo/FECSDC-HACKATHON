@@ -178,20 +178,24 @@ export default function ResultsPage() {
 
   const isPublished = resultsConfig.published && leaderboardData.length > 0;
 
-  // Once-only pill confetti burst on podium enter
+  // Once-only pill confetti burst on podium enter (DPR max 1.25, 30fps, < 1s)
   useEffect(() => {
     if (!isPublished || !confettiCanvasRef.current) return;
     const canvas = confettiCanvasRef.current;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
+    const cssWidth = canvas.offsetWidth;
+    const cssHeight = canvas.offsetHeight;
+    canvas.width = Math.round(cssWidth * dpr);
+    canvas.height = Math.round(cssHeight * dpr);
+    ctx.scale(dpr, dpr);
 
     const colors = ["#F47B30", "#F89C2E", "#4F4F6F", "#ffffff"];
-    const particles = Array.from({ length: 45 }, () => ({
-      x: canvas.width / 2 + (Math.random() - 0.5) * 120,
-      y: canvas.height * 0.4,
+    const particles = Array.from({ length: 36 }, () => ({
+      x: cssWidth / 2 + (Math.random() - 0.5) * 120,
+      y: cssHeight * 0.4,
       w: 8 + Math.random() * 8,
       h: 4,
       color: colors[Math.floor(Math.random() * colors.length)],
@@ -204,17 +208,25 @@ export default function ResultsPage() {
 
     let animId;
     let frames = 0;
+    let lastTime = 0;
+    const frameInterval = 1000 / 30; // 30fps cap
 
-    const render = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const render = (timestamp) => {
+      if (timestamp - lastTime < frameInterval) {
+        animId = requestAnimationFrame(render);
+        return;
+      }
+      lastTime = timestamp;
+
+      ctx.clearRect(0, 0, cssWidth, cssHeight);
       let alive = false;
 
       particles.forEach((p) => {
         p.x += p.vx;
         p.y += p.vy;
-        p.vy += 0.2; // gravity
+        p.vy += 0.25; // gravity
         p.rot += p.vRot;
-        if (frames > 35) p.opacity -= 0.02;
+        if (frames > 15) p.opacity -= 0.07;
 
         if (p.opacity > 0) {
           alive = true;
@@ -232,12 +244,15 @@ export default function ResultsPage() {
       });
 
       frames++;
-      if (alive && frames < 90) {
+      // Stop before 1s (28 frames at 30fps ≈ 0.93s)
+      if (alive && frames < 28) {
         animId = requestAnimationFrame(render);
+      } else {
+        ctx.clearRect(0, 0, cssWidth, cssHeight);
       }
     };
 
-    render();
+    animId = requestAnimationFrame(render);
 
     return () => {
       if (animId) cancelAnimationFrame(animId);

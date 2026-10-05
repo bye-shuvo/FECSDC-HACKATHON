@@ -29,20 +29,10 @@ export function SpotlightCard({
   };
 
   const handleMouseEnter = () => {
-    if (cardRef.current) {
-      const rect = cardRef.current.getBoundingClientRect();
-      boundsRef.current = {
-        left: rect.left + window.scrollX,
-        top: rect.top + window.scrollY,
-        width: rect.width,
-        height: rect.height,
-      };
-    }
     if (spotlightRef.current) spotlightRef.current.style.display = "block";
   };
 
   const handleMouseLeave = () => {
-    boundsRef.current = null;
     if (spotlightRef.current) spotlightRef.current.style.display = "none";
   };
 

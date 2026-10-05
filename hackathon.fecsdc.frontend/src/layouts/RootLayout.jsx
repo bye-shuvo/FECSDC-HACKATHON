@@ -17,8 +17,7 @@ function LayoutContent() {
   const location = useLocation();
   const staticEffects = shouldUseStaticPointerEffects();
 
-  // Scroll progress bar — disabled on low/static tier to avoid a scroll listener
-  // that wakes the JS thread on every scroll frame alongside all other handlers.
+  // Scroll progress bar — on high tier uses smooth spring; on low tier uses pure CSS scroll progress (zero JS scroll ticks)
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
@@ -36,7 +35,7 @@ function LayoutContent() {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-background text-foreground selection:bg-primary/30 selection:text-foreground">
+    <div className="relative min-h-[100svh] flex flex-col bg-background text-foreground selection:bg-primary/30 selection:text-foreground">
       {/* 0. Initial Site Load Screen (Shown once per session) */}
       <SiteLoader />
 
@@ -57,11 +56,17 @@ function LayoutContent() {
         Skip to main content
       </a>
 
-      {/* 5. 2px Gradient Scroll Progress Bar at the very top */}
-      <motion.div
-        className="fixed top-0 left-0 right-0 h-[2.5px] gradient-bg-brand z-60 origin-left"
-        style={{ scaleX }}
-      />
+      {/* 5. 2px Gradient Scroll Progress Bar at the very top (High tier spring, Low tier compositor CSS) */}
+      {!staticEffects ? (
+        <motion.div
+          className="fixed top-0 left-0 right-0 h-[2.5px] gradient-bg-brand z-60 origin-left"
+          style={{ scaleX }}
+        />
+      ) : (
+        <div
+          className="fixed top-0 left-0 right-0 h-[2.5px] gradient-bg-brand z-60 origin-left scroll-progress-bar"
+        />
+      )}
 
       {/* 6. Sticky Navigation Bar */}
       <Navbar />

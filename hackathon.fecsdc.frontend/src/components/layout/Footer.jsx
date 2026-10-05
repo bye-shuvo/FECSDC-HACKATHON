@@ -4,7 +4,8 @@ import { MessageSquare, Mail, MapPin } from "lucide-react";
 import { animate, stagger } from "animejs";
 import { BrandLogo, PillDivider, PillMark } from "../ui/PillDividers.jsx";
 import { siteConfig } from "../../data/siteConfig.js";
-import { shouldReduceMotion } from "../../lib/motion.js";
+import { shouldReduceMotion, ANIME_EASE_EXPO } from "../../lib/motion.js";
+import { isLowTier } from "../../hooks/useDeviceTier.js";
 
 // Custom crisp SVG icons for social channels
 function GithubIcon(props) {
@@ -40,7 +41,7 @@ export function Footer() {
   const hasReplayed = useRef(false);
 
   useEffect(() => {
-    if (shouldReduceMotion() || !oversizedWordmarkRef.current) return;
+    if (shouldReduceMotion() || isLowTier() || !oversizedWordmarkRef.current) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -54,7 +55,7 @@ export function Footer() {
               opacity: [0, 1],
               delay: stagger(75),
               duration: 550,
-              ease: "outExpo",
+              ease: ANIME_EASE_EXPO,
             });
           }
         }

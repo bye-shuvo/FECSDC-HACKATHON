@@ -21,16 +21,15 @@ export function Magnetic({ children, strength = 0.25, className = "" }) {
     return <div className={className}>{children}</div>;
   }
 
-  const handleMouseEnter = () => {
-    if (ref.current) boundsRef.current = ref.current.getBoundingClientRect();
-  };
-
   const handleMouseMove = (e) => {
     if (!boundsRef.current) return;
     const { clientX, clientY } = e;
     const { left, top, width, height } = boundsRef.current;
-    const centerX = left + width / 2;
-    const centerY = top + height / 2;
+    // Bounds are relative to document; clientX is viewport. Adjust with scroll or direct client rect:
+    const rectLeft = left - window.scrollX;
+    const rectTop = top - window.scrollY;
+    const centerX = rectLeft + width / 2;
+    const centerY = rectTop + height / 2;
     const distanceX = clientX - centerX;
     const distanceY = clientY - centerY;
 
@@ -39,7 +38,6 @@ export function Magnetic({ children, strength = 0.25, className = "" }) {
   };
 
   const handleMouseLeave = () => {
-    boundsRef.current = null;
     x.set(0);
     y.set(0);
   };
@@ -47,7 +45,6 @@ export function Magnetic({ children, strength = 0.25, className = "" }) {
   return (
     <motion.div
       ref={ref}
-      onMouseEnter={handleMouseEnter}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{ x: springX, y: springY }}

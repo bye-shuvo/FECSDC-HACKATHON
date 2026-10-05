@@ -1,30 +1,29 @@
 import { useEffect, useRef } from "react";
 import { animate, stagger } from "animejs";
-import { shouldReduceMotion, shouldUseStaticPointerEffects } from "../../lib/motion.js";
+import { shouldReduceMotion, ANIME_EASE_IN_OUT_QUAD } from "../../lib/motion.js";
 import { useSharedInView } from "../../hooks/useSharedInView.js";
+import { isLowTier } from "../../hooks/useDeviceTier.js";
 
 /**
  * Hero Pill Bar Choreography Background
  * Signature motif: floating rounded pill bars (from logo) with slow drift loop.
  * Pauses when offscreen or when reduced motion is preferred.
+ * On low tier: renders 3 static pill bars with zero JS loops.
  */
 export function HeroPillBackground() {
   const [containerRef, isInView] = useSharedInView({ once: false });
   const animRef = useRef(null);
   const isInViewRef = useRef(isInView);
-  const staticEffects = shouldUseStaticPointerEffects();
+  const lowTier = isLowTier();
 
   useEffect(() => {
-    if (shouldReduceMotion() || !containerRef.current) return;
+    if (shouldReduceMotion() || lowTier || !containerRef.current) return;
 
     const pills = containerRef.current.querySelectorAll(".hero-drift-pill");
     if (!pills || !pills.length) return;
-    const animatedPills = staticEffects
-      ? Array.from(pills).slice(0, 3)
-      : pills;
 
     // Anime.js staggered floating drift
-    animRef.current = animate(animatedPills, {
+    animRef.current = animate(pills, {
       translateY: [-12, 12],
       translateX: [-8, 8],
       opacity: [0.12, 0.26],
@@ -33,7 +32,7 @@ export function HeroPillBackground() {
       alternate: true,
       loop: true,
       autoplay: false,
-      ease: "inOutQuad",
+      ease: ANIME_EASE_IN_OUT_QUAD,
     });
     if (isInViewRef.current && !document.hidden) animRef.current.play();
 
@@ -50,7 +49,8 @@ export function HeroPillBackground() {
         animRef.current.pause();
       }
     };
-  }, [staticEffects]);
+  }, [lowTier]);
+
 
   useEffect(() => {
     isInViewRef.current = isInView;
@@ -71,13 +71,15 @@ export function HeroPillBackground() {
     { top: "25%", left: "48%", width: "80px", height: "10px", color: "var(--accent-amber)", rotate: "-30deg" },
   ];
 
+  const displayPills = lowTier ? pills.slice(0, 3) : pills;
+
   return (
     <div
       ref={containerRef}
       className="pointer-events-none absolute inset-0 overflow-hidden select-none z-0"
       aria-hidden="true"
     >
-      {pills.map((pill, idx) => (
+      {displayPills.map((pill, idx) => (
         <div
           key={idx}
           className="hero-drift-pill absolute rounded-full"
@@ -88,8 +90,8 @@ export function HeroPillBackground() {
             height: pill.height,
             backgroundColor: pill.color,
             transform: `rotate(${pill.rotate})`,
-            opacity: 0.16,
-            filter: "blur(0.5px)",
+            opacity: lowTier ? 0.10 : 0.16,
+            filter: lowTier ? "none" : "blur(0.5px)",
           }}
         />
       ))}
@@ -104,3 +106,4 @@ export function HeroPillBackground() {
     </div>
   );
 }
+

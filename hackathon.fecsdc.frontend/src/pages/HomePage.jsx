@@ -1,16 +1,30 @@
+import { lazy, Suspense } from "react";
 import { useDocumentTitle } from "../hooks/useDocumentTitle.js";
 import { siteConfig } from "../data/siteConfig.js";
 import { HeroSection } from "../components/sections/HeroSection.jsx";
 import { TechMarqueeSection } from "../components/sections/TechMarqueeSection.jsx";
 import { CountdownSection } from "../components/sections/CountdownSection.jsx";
 import { StatsSection } from "../components/sections/StatsSection.jsx";
-import { AboutTeaserSection } from "../components/sections/AboutTeaserSection.jsx";
-import { TimelineTeaserSection } from "../components/sections/TimelineTeaserSection.jsx";
-import { PrizesTeaserSection } from "../components/sections/PrizesTeaserSection.jsx";
-import { TracksRailSection } from "../components/sections/TracksRailSection.jsx";
-// import { SponsorsMarqueeSection } from "../components/sections/SponsorsMarqueeSection.jsx";
-import { FaqTeaserSection } from "../components/sections/FaqTeaserSection.jsx";
-import { FinalCtaSection } from "../components/sections/FinalCtaSection.jsx";
+
+// Below-fold sections lazy loaded to keep initial JS bundle under 150kB gzip
+const AboutTeaserSection = lazy(() =>
+  import("../components/sections/AboutTeaserSection.jsx").then((m) => ({ default: m.AboutTeaserSection }))
+);
+const TimelineTeaserSection = lazy(() =>
+  import("../components/sections/TimelineTeaserSection.jsx").then((m) => ({ default: m.TimelineTeaserSection }))
+);
+const PrizesTeaserSection = lazy(() =>
+  import("../components/sections/PrizesTeaserSection.jsx").then((m) => ({ default: m.PrizesTeaserSection }))
+);
+const TracksRailSection = lazy(() =>
+  import("../components/sections/TracksRailSection.jsx").then((m) => ({ default: m.TracksRailSection }))
+);
+const FaqTeaserSection = lazy(() =>
+  import("../components/sections/FaqTeaserSection.jsx").then((m) => ({ default: m.FaqTeaserSection }))
+);
+const FinalCtaSection = lazy(() =>
+  import("../components/sections/FinalCtaSection.jsx").then((m) => ({ default: m.FinalCtaSection }))
+);
 
 export default function HomePage() {
   useDocumentTitle(
@@ -34,38 +48,46 @@ export default function HomePage() {
 
       {/* 5. About + Features (Asymmetric Bento Grid with TiltCards) */}
       <div className="content-visibility-auto">
-        <AboutTeaserSection />
+        <Suspense fallback={<div className="min-h-[550px] w-full" aria-hidden="true" />}>
+          <AboutTeaserSection />
+        </Suspense>
       </div>
 
       {/* 6. Timeline Preview (Scroll-linked SVG progress line) */}
       <div className="content-visibility-auto">
-        <TimelineTeaserSection />
+        <Suspense fallback={<div className="min-h-[500px] w-full" aria-hidden="true" />}>
+          <TimelineTeaserSection />
+        </Suspense>
       </div>
 
       {/* 7. Prizes Preview (3D Tilt Podium Cards) */}
       <div className="content-visibility-auto">
-        <PrizesTeaserSection />
+        <Suspense fallback={<div className="min-h-[480px] w-full" aria-hidden="true" />}>
+          <PrizesTeaserSection />
+        </Suspense>
       </div>
 
       {/* 8. Tracks & Challenges Preview (Drag-to-scroll horizontal rail) */}
       <div className="content-visibility-auto">
-        <TracksRailSection />
+        <Suspense fallback={<div className="min-h-[420px] w-full" aria-hidden="true" />}>
+          <TracksRailSection />
+        </Suspense>
       </div>
 
-      {/* 9. Sponsors Marquee (Grayscale -> Color hover)
+      {/* 9. FAQ Teaser Accordion */}
       <div className="content-visibility-auto">
-        <SponsorsMarqueeSection />
-      </div> */}
-
-      {/* 10. FAQ Teaser Accordion */}
-      <div className="content-visibility-auto">
-        <FaqTeaserSection />
+        <Suspense fallback={<div className="min-h-[400px] w-full" aria-hidden="true" />}>
+          <FaqTeaserSection />
+        </Suspense>
       </div>
 
-      {/* 11. Final CTA Band (Oversized heading, magnetic button) */}
+      {/* 10. Final CTA Band (Oversized heading, magnetic button) */}
       <div className="content-visibility-auto">
-        <FinalCtaSection />
+        <Suspense fallback={<div className="min-h-[350px] w-full" aria-hidden="true" />}>
+          <FinalCtaSection />
+        </Suspense>
       </div>
     </div>
   );
 }
+

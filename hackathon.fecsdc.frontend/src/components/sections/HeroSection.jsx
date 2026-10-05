@@ -8,7 +8,7 @@ import { PillMark } from "../ui/PillDividers.jsx";
 import { TiltCard } from "../ui/TiltCard.jsx";
 import { Magnetic } from "../motion/Magnetic.jsx";
 import { SplitText } from "../ui/SplitText.jsx";
-import { shouldReduceMotion } from "../../lib/motion.js";
+import { shouldReduceMotion, ANIME_EASE_EXPO } from "../../lib/motion.js";
 
 import { useLoaderDone } from "../../hooks/useLoaderDone.js";
 
@@ -33,7 +33,7 @@ export function HeroSection() {
         opacity: [0, 1],
         delay: stagger(95),
         duration: 650,
-        ease: "outExpo",
+        ease: ANIME_EASE_EXPO,
       });
     }
 

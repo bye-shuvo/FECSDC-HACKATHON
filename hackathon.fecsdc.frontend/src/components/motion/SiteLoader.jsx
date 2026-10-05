@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { animate, createTimeline, stagger } from "animejs";
 import { useLoaderDone } from "../../hooks/useLoaderDone.js";
 import { ANIME_EASE_EXPO, LOADER_TIMINGS, shouldReduceMotion } from "../../lib/motion.js";
+import { isLowTier } from "../../hooks/useDeviceTier.js";
 
 const TEXT = "hackathon fecsdc";
 
@@ -21,13 +22,14 @@ export function SiteLoader() {
     }
 
     const reducedMotion = shouldReduceMotion();
+    const lowTier = isLowTier();
 
     // Lock body scroll during load
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
-    // Fast-path for reduced motion: quick fade out and mark done
-    if (reducedMotion) {
+    // Fast-path for reduced motion or low tier: quick fade out and mark done
+    if (reducedMotion || lowTier) {
       const timer = setTimeout(() => {
         document.body.style.overflow = originalOverflow;
         markLoaderDone();
@@ -38,6 +40,7 @@ export function SiteLoader() {
         document.body.style.overflow = originalOverflow;
       };
     }
+
 
     const startTime = Date.now();
     let isMounted = true;
@@ -67,7 +70,7 @@ export function SiteLoader() {
         opacity: [0, 1],
         duration: 450,
         delay: stagger(LOADER_TIMINGS.barStaggerMs),
-        ease: "outExpo",
+        ease: ANIME_EASE_EXPO,
       })
       // Text letters rise per-char with clip mask, stagger 30ms
       .add(chars, {
@@ -75,7 +78,7 @@ export function SiteLoader() {
         opacity: [0, 1],
         duration: 500,
         delay: stagger(LOADER_TIMINGS.charStaggerMs),
-        ease: "outExpo",
+        ease: ANIME_EASE_EXPO,
       }, "-=200");
     }
 

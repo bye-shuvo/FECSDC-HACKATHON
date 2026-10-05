@@ -16,33 +16,43 @@
 function computeTier() {
   if (typeof window === "undefined") return "high";
 
-  const { deviceMemory, connection } = window.navigator;
+  const nav = typeof navigator !== "undefined" ? navigator : {};
+  const deviceMemory = nav.deviceMemory;
+  const connection = nav.connection;
 
-  const coarsePointer =
-    window.matchMedia("(pointer: coarse)").matches ||
-    window.matchMedia("(any-pointer: coarse)").matches;
-
+  const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
   const saveData = connection?.saveData === true;
+  const lowMemory = Number.isFinite(deviceMemory) && deviceMemory <= 4;
 
-  const lowMemory =
-    Number.isFinite(deviceMemory) && deviceMemory <= 4;
-
-  // Low tier: touch / accessibility / save-data / constrained memory
-  if (coarsePointer || reducedMotion || saveData || lowMemory) {
+  // low = (pointer: coarse) OR deviceMemory <= 4 OR saveData OR reduced-motion
+  if (coarsePointer || lowMemory || saveData || reducedMotion) {
     return "low";
   }
 
-  // Fine pointer but we can't confirm a strong GPU — treat as mid unless
-  // we have explicit evidence of high-tier (nothing to go on here without
-  // running a GPU benchmark, so high is the default for fine-pointer).
-  // If you want to be more conservative, change this to "mid".
+  // mid = fine pointer with weak hardware
+  const finePointer = window.matchMedia("(pointer: fine)").matches;
+  const slowConnection = connection && (
+    connection.effectiveType === "2g" ||
+    connection.effectiveType === "3g" ||
+    connection.effectiveType === "slow-2g"
+  );
+  const midMemory = Number.isFinite(deviceMemory) && deviceMemory > 4 && deviceMemory <= 8;
+  const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(nav.userAgent || "");
+
+  if (finePointer && (midMemory || slowConnection || isMobileUA)) {
+    return "mid";
+  }
+
   return "high";
 }
 
-// Compute once — never changes within a session.
+// Compute once per session
 const DEVICE_TIER = computeTier();
+
+if (typeof document !== "undefined") {
+  document.documentElement.dataset.tier = DEVICE_TIER;
+}
 
 /**
  * @returns {"low" | "mid" | "high"}
@@ -55,3 +65,4 @@ export function useDeviceTier() {
 export const isLowTier = () => DEVICE_TIER === "low";
 export const isMidTier = () => DEVICE_TIER === "mid";
 export const isHighTier = () => DEVICE_TIER === "high";
+

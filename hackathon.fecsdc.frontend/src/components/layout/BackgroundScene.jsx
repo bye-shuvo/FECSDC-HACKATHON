@@ -1,8 +1,9 @@
 import { useEffect, useRef } from "react";
 import { useScroll, useTransform, motion } from "motion/react";
 import { animate, stagger } from "animejs";
-import { shouldReduceMotion, shouldUseStaticPointerEffects } from "../../lib/motion.js";
+import { shouldReduceMotion, ANIME_EASE_IN_OUT_SINE } from "../../lib/motion.js";
 import { useSharedInView } from "../../hooks/useSharedInView.js";
+import { isHighTier, isLowTier } from "../../hooks/useDeviceTier.js";
 
 const pills = [
   { top: "8%", left: "5%", width: "160px", height: "14px", color: "var(--primary)" },
@@ -17,36 +18,34 @@ const pills = [
 /**
  * BackgroundScene Component
  * Layered fixed background system with per-route variants:
- * - 'landing': full aurora + grid + pill-bar field + cursor spotlight
- * - 'content': grid + faint pills only
- * - 'locked': pills + scanlines overlay
- * - 'results': floating confetti-lite pill particles
+ * - High tier: full aurora blur + parallax grid with mask + 7 drifting pills + cursor spotlight
+ * - Mid tier: full aurora + grid + pills, no global spotlight (CSS card hover glow only)
+ * - Low tier: static radial gradient aurora, static unmasked grid, 3 static pills, 0 full-screen animated layers
  */
 export function BackgroundScene({ variant = "content" }) {
   const [containerRef, isInView] = useSharedInView({ once: false });
   const pillFieldRef = useRef(null);
   const animRef = useRef(null);
   const isInViewRef = useRef(isInView);
-  const staticEffects = shouldUseStaticPointerEffects();
+  const lowTier = isLowTier();
+  const highTier = isHighTier();
 
   const { scrollY } = useScroll();
-  // Faint parallax 0.05 on scroll
+  // Faint parallax 0.05 on scroll (high/mid tier only)
   const gridY = useTransform(scrollY, [0, 2000], [0, 100]);
 
   useEffect(() => {
     if (
       shouldReduceMotion() ||
+      lowTier ||
       !pillFieldRef.current ||
-      (staticEffects && variant === "landing")
+      variant !== "landing"
     ) return;
 
     const pillElements = pillFieldRef.current.querySelectorAll(".bg-pill-bar");
-    const animatedPills = staticEffects
-      ? Array.from(pillElements).slice(0, 3)
-      : pillElements;
-    if (!animatedPills.length) return;
+    if (!pillElements.length) return;
 
-    animRef.current = animate(animatedPills, {
+    animRef.current = animate(pillElements, {
       translateX: [-18, 18],
       translateY: [-10, 10],
       opacity: [0.08, 0.18],
@@ -55,7 +54,7 @@ export function BackgroundScene({ variant = "content" }) {
       alternate: true,
       loop: true,
       autoplay: false,
-      ease: "inOutSine",
+      ease: ANIME_EASE_IN_OUT_SINE,
     });
     if (isInViewRef.current && !document.hidden) animRef.current.play();
 
@@ -71,7 +70,8 @@ export function BackgroundScene({ variant = "content" }) {
       document.removeEventListener("visibilitychange", onVisibilityChange);
       if (animRef.current && animRef.current.pause) animRef.current.pause();
     };
-  }, [staticEffects, variant]);
+  }, [lowTier, variant]);
+
 
   useEffect(() => {
     isInViewRef.current = isInView;
@@ -80,39 +80,53 @@ export function BackgroundScene({ variant = "content" }) {
     else animRef.current.pause();
   }, [isInView]);
 
+  const displayPills = lowTier ? pills.slice(0, 3) : pills;
+
   return (
     <div
       ref={containerRef}
       className="pointer-events-none fixed inset-0 z-0 overflow-hidden select-none"
       aria-hidden="true"
     >
-      {/* 1. Base SVG Noise Grain */}
-      <div
-        className="absolute inset-0 opacity-[0.035] mix-blend-overlay"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-        }}
-      />
-
-      {/* 2. Grid with Parallax 0.05 and Radial Mask */}
-      <motion.div
-        style={{ y: gridY }}
-        className="absolute -inset-10 opacity-[0.06]"
-      >
+      {/* 1. Base SVG Noise Grain (High / Mid tier only - omitted on Low tier) */}
+      {!lowTier && (
         <div
-          className="w-full h-full"
+          className="absolute inset-0 opacity-[0.035] mix-blend-overlay"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+          }}
+        />
+      )}
+
+      {/* 2. Grid (Low tier: static unmasked grid; Mid/High tier: Parallax + Radial Mask) */}
+      {lowTier ? (
+        <div
+          className="absolute inset-0 opacity-[0.04]"
           style={{
             backgroundImage: `linear-gradient(to right, var(--foreground) 1px, transparent 1px), linear-gradient(to bottom, var(--foreground) 1px, transparent 1px)`,
             backgroundSize: "40px 40px",
-            maskImage: "radial-gradient(ellipse 70% 60% at 50% 40%, black 30%, transparent 80%)",
-            WebkitMaskImage: "radial-gradient(ellipse 70% 60% at 50% 40%, black 30%, transparent 80%)",
           }}
         />
-      </motion.div>
+      ) : (
+        <motion.div
+          style={{ y: gridY }}
+          className="absolute -inset-10 opacity-[0.06]"
+        >
+          <div
+            className="w-full h-full"
+            style={{
+              backgroundImage: `linear-gradient(to right, var(--foreground) 1px, transparent 1px), linear-gradient(to bottom, var(--foreground) 1px, transparent 1px)`,
+              backgroundSize: "40px 40px",
+              maskImage: "radial-gradient(ellipse 70% 60% at 50% 40%, black 30%, transparent 80%)",
+              WebkitMaskImage: "radial-gradient(ellipse 70% 60% at 50% 40%, black 30%, transparent 80%)",
+            }}
+          />
+        </motion.div>
+      )}
 
       {/* 3. Pill-Bar Field (Logo Motif) */}
       <div ref={pillFieldRef} className="absolute inset-0">
-        {pills.map((pill, idx) => (
+        {displayPills.map((pill, idx) => (
           <div
             key={idx}
             className="bg-pill-bar absolute rounded-full"
@@ -122,35 +136,46 @@ export function BackgroundScene({ variant = "content" }) {
               width: pill.width,
               height: pill.height,
               backgroundColor: pill.color,
-              opacity: 0.12,
-              filter: "blur(1px)",
+              opacity: lowTier ? 0.08 : 0.12,
+              filter: lowTier ? "none" : "blur(1px)",
             }}
           />
         ))}
       </div>
 
-      {/* 4. Compositor-translated global cursor spotlight */}
-      <div
-        id="background-cursor-spotlight"
-        className="pointer-events-none absolute left-0 top-0 h-[1200px] w-[1200px] will-change-transform"
-        style={{
-          transform: "translate3d(-700px, -700px, 0)",
-          background: "radial-gradient(600px circle at 50% 50%, rgba(244, 123, 48, 0.07), transparent 60%)",
-        }}
-      />
+      {/* 4. Global cursor spotlight (High tier ONLY - removed on mid and low) */}
+      {highTier && (
+        <div
+          id="background-cursor-spotlight"
+          className="pointer-events-none absolute left-0 top-0 h-[1200px] w-[1200px] will-change-transform"
+          style={{
+            transform: "translate3d(-700px, -700px, 0)",
+            background: "radial-gradient(600px circle at 50% 50%, rgba(244, 123, 48, 0.07), transparent 60%)",
+          }}
+        />
+      )}
 
-      {/* 5. Aurora Blobs (Slow CSS Drift - Landing Variant only) */}
+      {/* 5. Aurora Blobs: High/Mid tier uses blur + drift; Low tier uses static radial-gradient */}
       {variant === "landing" && (
-        <>
+        lowTier ? (
           <div
-            className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full blur-[140px] opacity-[0.14] animate-hero-float"
-            style={{ backgroundColor: "var(--primary)" }}
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: "radial-gradient(circle at 30% 25%, rgba(244, 123, 48, 0.09) 0%, transparent 55%), radial-gradient(circle at 75% 65%, rgba(248, 156, 46, 0.07) 0%, transparent 50%)",
+            }}
           />
-          <div
-            className="absolute top-2/3 right-1/4 w-[420px] h-[420px] rounded-full blur-[130px] opacity-[0.12] animate-hero-float"
-            style={{ backgroundColor: "var(--accent-amber)", animationDelay: "-3s" }}
-          />
-        </>
+        ) : (
+          <>
+            <div
+              className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full blur-[140px] opacity-[0.14] animate-hero-float"
+              style={{ backgroundColor: "var(--primary)" }}
+            />
+            <div
+              className="absolute top-2/3 right-1/4 w-[420px] h-[420px] rounded-full blur-[130px] opacity-[0.12] animate-hero-float"
+              style={{ backgroundColor: "var(--accent-amber)", animationDelay: "-3s" }}
+            />
+          </>
+        )
       )}
 
       {/* Locked Variant: Scanline Overlay */}
@@ -178,3 +203,4 @@ export function BackgroundScene({ variant = "content" }) {
     </div>
   );
 }
+

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { animate, stagger } from "animejs";
-import { shouldReduceMotion } from "../../lib/motion.js";
+import { shouldReduceMotion, ANIME_EASE_IN_OUT_SINE } from "../../lib/motion.js";
 
 /**
  * Creative Signature Pill-Bar Loader
@@ -22,7 +22,7 @@ export function PillLoader({ message = "LOADING ENVIRONMENT..." }) {
       delay: stagger(140),
       duration: 850,
       loop: true,
-      ease: "inOutSine",
+      ease: ANIME_EASE_IN_OUT_SINE,
     });
 
     return () => {

@@ -3,6 +3,7 @@ import { useLocation } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import { ROUTE_TRANSITION_TIMINGS, shouldReduceMotion } from "../../lib/motion.js";
 import { useLoaderDone } from "../../hooks/useLoaderDone.js";
+import { isLowTier } from "../../hooks/useDeviceTier.js";
 
 const BARS = [
   { id: 1, color: "var(--primary)" },
@@ -40,8 +41,8 @@ export function RouteTransition() {
 
     prevPathRef.current = location.pathname;
 
-    // Skip heavy pill animation if reduced motion is requested
-    if (shouldReduceMotion()) {
+    // Skip heavy pill animation if reduced motion is requested or low tier device
+    if (shouldReduceMotion() || isLowTier()) {
       window.scrollTo(0, 0);
       focusMainHeading();
       return;

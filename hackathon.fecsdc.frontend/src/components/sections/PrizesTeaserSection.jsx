@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Container } from "../ui/Section.jsx";
 import { SectionPillMarker } from "../ui/PillDividers.jsx";
 import { podiumPrizes } from "../../data/prizes.js";
@@ -53,6 +53,9 @@ export function PrizesTeaserSection() {
         >
           {orderedPrizes.map((prize) => {
             const isChampion = prize.rank === 1;
+            const arrowMotion = prefersReducedMotion
+              ? {}
+              : { x: isChampion ? [0, 7, 0] : [0, -7, 0] };
 
             return (
               <StaggerItem
@@ -91,11 +94,33 @@ export function PrizesTeaserSection() {
                     </div>
                   </div>
                   <div className="flex flex-col h-56 w-full items-center justify-center">
-                    <span
-                      className={`mt-4 font-jetbrains-mono text-xs md:text-sm font-medium uppercase tracking-widest transition-colors duration-150 ${isChampion ? "text-primary" : "text-muted-foreground group-hover:text-primary"}`}
-                    >
-                      {prize.place}
-                    </span>
+                    <div className="mt-4 flex items-center justify-center gap-3">
+                      {!isChampion && (
+                        <motion.span
+                          animate={arrowMotion}
+                          transition={{ duration: 1.2, ease: "easeInOut", repeat: Infinity }}
+                          className="hidden md:inline-flex text-primary"
+                          aria-hidden="true"
+                        >
+                          <ArrowLeft className="h-4 w-4" />
+                        </motion.span>
+                      )}
+                      <span
+                        className={`font-jetbrains-mono text-xs md:text-sm font-medium uppercase tracking-widest transition-colors duration-150 ${isChampion ? "text-primary" : "text-muted-foreground group-hover:text-primary"}`}
+                      >
+                        {prize.place}
+                      </span>
+                      {isChampion && (
+                        <motion.span
+                          animate={arrowMotion}
+                          transition={{ duration: 1.2, ease: "easeInOut", repeat: Infinity }}
+                          className="hidden md:inline-flex text-primary"
+                          aria-hidden="true"
+                        >
+                          <ArrowRight className="h-4 w-4" />
+                        </motion.span>
+                      )}
+                    </div>
                     <h3 className="mt-2 font-jetbrains-mono text-xl md:text-3xl font-bold leading-tight text-foreground">
                       {prize.teaserTitle}
                     </h3>

@@ -7,6 +7,7 @@ import { PillMark } from "../components/ui/PillDividers.jsx";
 import { SpotlightCard } from "../components/ui/SpotlightCard.jsx";
 import { Reveal } from "../components/motion/Reveal.jsx";
 import { animate } from "animejs";
+import { ANIME_EASE_IN_OUT_SINE } from "../lib/motion.js";
 
 export default function NotFoundPage({ message }) {
   useDocumentTitle("404: Route Not Found", "The requested page does not exist.");
@@ -24,7 +25,7 @@ export default function NotFoundPage({ message }) {
       rotate: () => [animeRandom(-15, 15), animeRandom(-25, 25)],
       opacity: [0.4, 0.9, 0.4],
       duration: 3500,
-      ease: "easeInOutSine",
+      ease: ANIME_EASE_IN_OUT_SINE,
       alternate: true,
       loop: true,
       delay: (el, i) => i * 300,

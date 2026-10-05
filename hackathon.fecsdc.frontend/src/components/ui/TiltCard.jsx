@@ -1,13 +1,14 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { motion, useMotionValue, useSpring } from "motion/react";
 import { MOTION_SPRING } from "../../lib/motion.js";
 import { useReducedMotion } from "../../hooks/useReducedMotion.js";
+import { isLowTier } from "../../hooks/useDeviceTier.js";
 
 /**
  * TiltCard Component
  * 3D perspective tilt via cursor coordinate offsets (max 8deg, perspective 900px).
  * Internal glare highlight layer following cursor.
- * Disabled on touch & reduced-motion.
+ * Disabled on low tier & reduced-motion.
  */
 export function TiltCard({
   children,
@@ -20,59 +21,66 @@ export function TiltCard({
   const cardRef = useRef(null);
   const glareRef = useRef(null);
   const boundsRef = useRef(null);
-  const resizeObserverRef = useRef(null);
   const prefersReduced = useReducedMotion();
+  const lowTier = isLowTier();
+  const disabled = prefersReduced || lowTier;
+
   const rotateX = useMotionValue(0);
   const rotateY = useMotionValue(0);
   const springRotateX = useSpring(rotateX, MOTION_SPRING);
   const springRotateY = useSpring(rotateY, MOTION_SPRING);
 
-  const updateBounds = useCallback(() => {
-    if (cardRef.current) boundsRef.current = cardRef.current.getBoundingClientRect();
-  }, []);
+  useEffect(() => {
+    if (disabled || !cardRef.current) return;
 
-  const stopObservingBounds = useCallback(() => {
-    resizeObserverRef.current?.disconnect();
-    resizeObserverRef.current = null;
-    window.removeEventListener("resize", updateBounds);
-    window.removeEventListener("scroll", updateBounds, true);
-  }, [updateBounds]);
+    const element = cardRef.current;
+    const updateBounds = () => {
+      const rect = element.getBoundingClientRect();
+      boundsRef.current = {
+        left: rect.left + window.scrollX,
+        top: rect.top + window.scrollY,
+        width: rect.width,
+        height: rect.height,
+      };
+    };
 
-  useEffect(() => () => stopObservingBounds(), [stopObservingBounds]);
+    updateBounds();
+
+    if (typeof ResizeObserver !== "undefined") {
+      const observer = new ResizeObserver(updateBounds);
+      observer.observe(element);
+      return () => observer.disconnect();
+    }
+  }, [disabled]);
 
   const handleMouseMove = (e) => {
-    if (prefersReduced || !boundsRef.current) return;
-    const rect = boundsRef.current;
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    if (disabled || !boundsRef.current) return;
+    const bounds = boundsRef.current;
+    const x = e.pageX - bounds.left;
+    const y = e.pageY - bounds.top;
 
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
+    const centerX = bounds.width / 2;
+    const centerY = bounds.height / 2;
 
     rotateX.set(((y - centerY) / centerY) * -maxTilt);
     rotateY.set(((x - centerX) / centerX) * maxTilt);
     if (glareRef.current) {
-      glareRef.current.style.background = `radial-gradient(400px circle at ${(x / rect.width) * 100}% ${(y / rect.height) * 100}%, rgba(248, 156, 46, 0.18), transparent 70%)`;
+      glareRef.current.style.background = `radial-gradient(400px circle at ${(x / bounds.width) * 100}% ${(y / bounds.height) * 100}%, rgba(248, 156, 46, 0.18), transparent 70%)`;
     }
   };
 
   const handleMouseEnter = () => {
-    updateBounds();
-    if (typeof ResizeObserver !== "undefined" && cardRef.current) {
-      resizeObserverRef.current = new ResizeObserver(updateBounds);
-      resizeObserverRef.current.observe(cardRef.current);
-    }
-    window.addEventListener("resize", updateBounds, { passive: true });
-    window.addEventListener("scroll", updateBounds, { passive: true, capture: true });
+    if (disabled) return;
     if (glareRef.current) glareRef.current.style.display = "block";
   };
+
   const handleMouseLeave = () => {
-    stopObservingBounds();
-    boundsRef.current = null;
+    if (disabled) return;
     if (glareRef.current) glareRef.current.style.display = "none";
     rotateX.set(0);
     rotateY.set(0);
   };
+
 
   return (
     <div style={{ perspective: "900px" }} className="w-full h-full">

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { animate } from "animejs";
-import { shouldReduceMotion } from "../../lib/motion.js";
+import { shouldReduceMotion, ANIME_EASE_EXPO } from "../../lib/motion.js";
+import { isLowTier } from "../../hooks/useDeviceTier.js";
 
 /**
  * Animated number counter using anime.js
@@ -21,7 +22,7 @@ export function CountUp({
   useEffect(() => {
     if (!containerRef.current || !spanRef.current) return;
 
-    if (shouldReduceMotion()) {
+    if (shouldReduceMotion() || isLowTier()) {
       spanRef.current.textContent = `${prefix}${to}${suffix}`;
       return;
     }
@@ -35,7 +36,7 @@ export function CountUp({
 
           animate(counterObj, {
             val: to,
-            ease: "outExpo",
+            ease: ANIME_EASE_EXPO,
             duration,
             onUpdate: () => {
               if (spanRef.current) {

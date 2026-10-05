@@ -207,9 +207,7 @@
     cursor: text !important;
   }
 
-  /* Remove 300ms tap delay on mobile without disabling pinch-zoom.
-     touch-action:manipulation = allow tap + double-tap but no pan-x/y tricks.
-     Apply to all interactive elements. */
+  /* Eliminate 300ms mobile tap delay without disabling pinch-zoom */
   a, button, [role="button"], [data-cursor], label, summary {
     touch-action: manipulation;
   }
@@ -398,4 +396,79 @@ html[data-tab-hidden="true"] .animate-marquee-slow,
 html[data-tab-hidden="true"] .animate-marquee-reverse,
 html[data-tab-hidden="true"] .animate-hero-float {
   animation-play-state: paused !important;
+}
+
+/* ==========================================================================
+   DEVICE TIER OPTIMIZATIONS (ZERO UI CHANGE ON HIGH TIER)
+   ========================================================================== */
+
+/* ─── Mid Tier: CSS Image Cursor (SVG ring, 32px, zero JS loop) ───────── */
+html[data-tier="mid"] body {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='none' stroke='%23F47B30' stroke-width='1.5' stroke-opacity='0.6'/%3E%3Ccircle cx='16' cy='16' r='2' fill='%23F47B30'/%3E%3C/svg%3E") 16 16, auto;
+}
+html[data-tier="mid"] a,
+html[data-tier="mid"] button,
+html[data-tier="mid"] [role="button"],
+html[data-tier="mid"] [data-cursor="button"],
+html[data-tier="mid"] [data-cursor="link"] {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23F47B30' fill-opacity='0.25' stroke='%23F89C2E' stroke-width='2'/%3E%3C/svg%3E") 16 16, pointer;
+}
+html[data-tier="mid"] [data-cursor="card"] {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23F47B30' stroke-width='1.5' stroke-opacity='0.5'/%3E%3C/svg%3E") 16 16, pointer;
+}
+html[data-tier="mid"] [data-cursor="locked"] {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='12' fill='%23121217' fill-opacity='0.8' stroke='%23F89C2E' stroke-width='1.5'/%3E%3Crect x='12' y='14' width='8' height='6' rx='1' fill='%23F89C2E'/%3E%3Cpath d='M13 14v-2a3 3 0 0 1 6 0v2' fill='none' stroke='%23F89C2E' stroke-width='1.5'/%3E%3C/svg%3E") 16 16, not-allowed;
+}
+html[data-tier="mid"] input,
+html[data-tier="mid"] textarea,
+html[data-tier="mid"] select {
+  cursor: text !important;
+}
+
+/* ─── Low Tier: GPU Overrides (No blur, no blend mode, small single shadows) ── */
+html[data-tier="low"] [class*="backdrop-blur"],
+html[data-tier="low"] .backdrop-blur-sm,
+html[data-tier="low"] .backdrop-blur-md,
+html[data-tier="low"] .backdrop-blur-xl,
+html[data-tier="low"] .backdrop-blur-2xl {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html[data-tier="low"] nav.backdrop-blur-md,
+html[data-tier="low"] nav.backdrop-blur-sm,
+html[data-tier="low"] nav[class*="backdrop-blur"],
+html[data-tier="low"] header {
+  background-color: var(--card) !important;
+}
+
+html[data-tier="low"] .mix-blend-overlay,
+html[data-tier="low"] [class*="mix-blend-"] {
+  mix-blend-mode: normal !important;
+}
+
+html[data-tier="low"] .shadow-2xl,
+html[data-tier="low"] .shadow-xl,
+html[data-tier="low"] .shadow-lg,
+html[data-tier="low"] .shadow-md {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Zero full-screen animated layers on low tier */
+html[data-tier="low"] .animate-hero-float {
+  animation: none !important;
+  transform: none !important;
+}
+
+/* ─── Compositor Scroll Progress Bar ───────────────────────────────────── */
+@keyframes progress-scroll {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@supports (animation-timeline: scroll()) {
+  .scroll-progress-bar {
+    animation: progress-scroll linear;
+    animation-timeline: scroll(root);
+  }
 }

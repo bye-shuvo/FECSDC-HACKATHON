@@ -2,27 +2,35 @@ import { motion, AnimatePresence } from "motion/react";
 import { useCountdown } from "../../hooks/useCountdown.js";
 import { MOTION_EASE } from "../../lib/motion.js";
 import { PillMark } from "./PillDividers.jsx";
+import { isLowTier } from "../../hooks/useDeviceTier.js";
 
 /**
  * Animated individual digit slot with pill frame styling
  */
 function DigitSlot({ value }) {
   const formatted = String(value).padStart(2, "0");
+  const lowTier = isLowTier();
 
   return (
     <div className="relative inline-flex items-center justify-center min-w-[3.6rem] sm:min-w-[4.5rem] md:min-w-[5.2rem] h-16 sm:h-20 md:h-24 bg-card/90 border border-border rounded-full overflow-hidden px-3 shadow-inner">
-      <AnimatePresence mode="popLayout" initial={false}>
-        <motion.span
-          key={formatted}
-          initial={{ y: "80%", opacity: 0 }}
-          animate={{ y: "0%", opacity: 1 }}
-          exit={{ y: "-80%", opacity: 0 }}
-          transition={{ duration: 0.35, ease: MOTION_EASE }}
-          className="font-mono text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-foreground tabular-nums select-none"
-        >
+      {lowTier ? (
+        <span className="font-mono text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-foreground tabular-nums select-none">
           {formatted}
-        </motion.span>
-      </AnimatePresence>
+        </span>
+      ) : (
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.span
+            key={formatted}
+            initial={{ y: "80%", opacity: 0 }}
+            animate={{ y: "0%", opacity: 1 }}
+            exit={{ y: "-80%", opacity: 0 }}
+            transition={{ duration: 0.35, ease: MOTION_EASE }}
+            className="font-mono text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-foreground tabular-nums select-none"
+          >
+            {formatted}
+          </motion.span>
+        </AnimatePresence>
+      )}
     </div>
   );
 }
