@@ -91,8 +91,8 @@ async function register(req, res) {
   }
 
   const db = getDatabase();
-  if (await getUserByEmail(db, email))
-    throw httpError(409, "A user with this email already exists.");
+  if (await getUserById(db, id))
+    throw httpError(409, "The user is already registered!");
 
   const user = await createUser(db, { id, name, hackerrank_username: hackerrankUsername, email, batch });
   res.status(201).json({ user });
