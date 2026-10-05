@@ -1,4 +1,4 @@
-# Team Change Summary
+# Yousuf's Changes Summary
 
 ## Registration: HackerRank Username
 
@@ -21,7 +21,6 @@
 ## Challenge Navigation and Submission
 
 - The Challenges navigation remains the primary entry point to the challenge tracks and problem statements.
-- Removed the redundant Questions links and `/hackathon/questions` route; `/problem-statements` remains available through Challenges.
 - The Submit your project link from a problem detail page passes that problem's key in the URL.
 - The submission form uses the key to select the matching challenge after question options load. It matches by question ID or by the problem title.
 
