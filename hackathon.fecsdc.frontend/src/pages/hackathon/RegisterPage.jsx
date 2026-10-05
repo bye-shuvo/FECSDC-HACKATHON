@@ -201,11 +201,15 @@ export default function RegisterPage() {
         });
       } catch (err) {
         if (err instanceof ApiClientError) {
-          if (err.fieldErrors?.id) {
+          const errorMessage = err.message.toLowerCase();
+          const duplicateId = /user is already registered|users\.primary|users\.id/.test(errorMessage);
+          const duplicateEmail = /email|users\.email/.test(errorMessage);
+
+          if (err.fieldErrors?.id || (err.status === 409 && duplicateId)) {
             dispatchErrors({ type: "SET_FIELD", name: "id", error: "This registration number is already registered." });
             const idEl = document.querySelector('[name="id"]');
             if (idEl) idEl.focus();
-          } else if (err.status === 409 || err.fieldErrors?.email) {
+          } else if (err.fieldErrors?.email || (err.status === 409 && duplicateEmail)) {
             dispatchErrors({ type: "SET_FIELD", name: "email", error: "This email is already registered." });
             const emailEl = document.querySelector('[name="email"]');
             if (emailEl) emailEl.focus();

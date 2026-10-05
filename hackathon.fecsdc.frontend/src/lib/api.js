@@ -179,11 +179,6 @@ export async function apiFetch(endpoint, options = {}) {
         else if (data.errors && typeof data.errors === "object") fieldErrors = data.errors;
       }
 
-      if (response.status === 409) {
-        errorMessage = "This email is already registered.";
-        fieldErrors = { email: "This email is already registered." };
-      }
-
       throw new ApiClientError(errorMessage, response.status, fieldErrors, data);
     }
 
