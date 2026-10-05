@@ -562,31 +562,7 @@ export default function SubmitPage() {
                     <div className="h-3.5 w-36 bg-muted/60 rounded animate-pulse" />
                     <div className="h-10 w-full bg-muted/40 rounded-md animate-pulse" />
                   </div>
-                ) : questionsErrorMsg && (!questions || questions.length === 0) ? (
-                  <div
-                    role="alert"
-                    className="p-4 rounded-md border border-destructive/40 bg-destructive/5 flex items-start gap-3"
-                  >
-                    <AlertCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
-                    <div className="flex-1 space-y-2">
-                      <p className="text-xs text-destructive font-mono">{questionsErrorMsg}</p>
-                      <button
-                        type="button"
-                        onClick={refetchQuestions}
-                        className="inline-flex items-center gap-1.5 text-xs font-mono text-primary underline underline-offset-2 hover:no-underline focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2 rounded"
-                      >
-                        <RefreshCw className="w-3 h-3" />
-                        Retry
-                      </button>
-                    </div>
-                  </div>
-                ) : questions && questions.length === 0 ? (
-                  <div className="p-4 rounded-md border border-border bg-muted/30 text-center" role="status">
-                    <p className="text-xs font-mono text-muted-foreground">
-                      Questions are not available yet. Check back closer to hackathon day.
-                    </p>
-                  </div>
-                ) : (
+                ) : questions && questions.length > 0 ? (
                   <Select
                     label="Challenge Question"
                     name="question_id"
@@ -600,8 +576,54 @@ export default function SubmitPage() {
                     disabled={submitMutation.isPending}
                   >
                     {/* Memoized options to prevent re-creation on every keystroke */}
-                    <QuestionOptions questions={questions || []} />
+                    <QuestionOptions questions={questions} />
                   </Select>
+                ) : (
+                  <>
+                    {questionsErrorMsg ? (
+                      <div
+                        role="alert"
+                        className="p-4 rounded-md border border-destructive/40 bg-destructive/5 flex items-start gap-3"
+                      >
+                        <AlertCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                        <div className="flex-1 space-y-2">
+                          <p className="text-xs text-destructive font-mono">{questionsErrorMsg}</p>
+                          <button
+                            type="button"
+                            onClick={refetchQuestions}
+                            className="inline-flex items-center gap-1.5 text-xs font-mono text-primary underline underline-offset-2 hover:no-underline focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2 rounded"
+                          >
+                            <RefreshCw className="w-3 h-3" />
+                            Retry
+                          </button>
+                        </div>
+                      </div>
+                    ) : questions && questions.length === 0 ? (
+                      <div className="p-4 rounded-md border border-border bg-muted/30 text-center" role="status">
+                        <p className="text-xs font-mono text-muted-foreground">
+                          Questions are not available yet. Enter the question ID provided by the organizers.
+                        </p>
+                      </div>
+                    ) : null}
+                    <Input
+                      label="Challenge Question ID"
+                      name="question_id"
+                      id="question_id"
+                      type="number"
+                      inputMode="numeric"
+                      min="1"
+                      step="1"
+                      required
+                      placeholder="Enter the question ID"
+                      helperText="Use the question ID provided by the organizers."
+                      error={errors.question_id}
+                      ref={fieldRefCallbacks.question_id}
+                      defaultValue={INITIAL_FORM.question_id}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      disabled={submitMutation.isPending}
+                    />
+                  </>
                 )}
 
                 {showRegistrationField && (
@@ -691,8 +713,7 @@ export default function SubmitPage() {
                     size="md"
                     disabled={
                       submitMutation.isPending ||
-                      isQuestionsLoading ||
-                      (!isQuestionsLoading && questions !== null && questions.length === 0 && !questionsErrorMsg)
+                      isQuestionsLoading
                     }
                     icon={submitMutation.isPending ? undefined : ArrowRight}
                     aria-disabled={submitMutation.isPending}
