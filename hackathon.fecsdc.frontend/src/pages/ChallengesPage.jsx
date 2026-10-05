@@ -50,7 +50,7 @@ export default function ChallengesPage() {
           eyebrow="CHALLENGE TRACKS & DOMAINS"
           title="Hackathon Challenges"
           gradientWord="Challenges"
-          description="Choose your engineering battleground. Teams select one of the four specialized tracks upon problem statement drop."
+          description="Choose your engineering battleground. Teams select one of the two specialized tracks upon problem statement drop."
           breadcrumbLinks={[
             { label: "Home", href: "/" },
             { label: "Challenges" }

@@ -12,7 +12,7 @@ function DigitSlot({ value }) {
   const lowTier = isLowTier();
 
   return (
-    <div className="relative inline-flex items-center justify-center min-w-[3.6rem] sm:min-w-[4.5rem] md:min-w-[5.2rem] h-16 sm:h-20 md:h-24 bg-card/90 border border-border rounded-full overflow-hidden px-3 shadow-inner">
+    <div className="relative inline-flex items-center justify-center min-w-[3.6rem] sm:min-w-18 md:min-w-[5.2rem] h-14 sm:h-20 md:h-20 bg-card/90 border border-border rounded-full overflow-hidden px-3 shadow-inner">
       {lowTier ? (
         <span className="font-mono text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-foreground tabular-nums select-none">
           {formatted}
@@ -64,16 +64,16 @@ export function Countdown({ targetDate, label = "HACKING COMMENCES IN", classNam
   return (
     <div className={`flex flex-col items-center justify-center gap-6 ${className}`}>
       {label && (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center md:gap-2">
           <PillMark size="sm" />
           <span className="font-label text-xs tracking-widest text-muted-foreground uppercase">
             {label}
           </span>
         </div>
       )}
-      <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
+      <div className="flex items-center sm:gap-4 md:gap-6">
         {units.map((unit, index) => (
-          <div key={unit.label} className="flex items-center gap-2 sm:gap-4 md:gap-6">
+          <div key={unit.label} className="flex items-center sm:gap-4 md:gap-6">
             <div className="flex flex-col items-center gap-2">
               <DigitSlot value={unit.value} />
               <span className="font-label text-[10px] md:text-xs text-muted-foreground tracking-widest font-semibold uppercase">

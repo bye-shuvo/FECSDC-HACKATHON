@@ -95,7 +95,7 @@ export default function FaqPage() {
         {/* Still Have Questions Box */}
         <div className="mt-12">
           <SpotlightCard className="p-6 md:p-8 rounded-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-            <div className="space-y-1">
+            <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <HelpCircle className="w-5 h-5 text-primary" />
                 <h3 className="text-base font-display font-bold text-foreground">
@@ -107,11 +107,11 @@ export default function FaqPage() {
               </p>
             </div>
             <a
-              href="https://discord.gg/fecsdc"
+              href="https://discord.gg/DXExNDt7r"
               target="_blank"
               rel="noopener noreferrer"
               data-cursor="link"
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-sm bg-primary text-primary-foreground text-xs font-mono font-bold shadow hover:brightness-110 shrink-0 transition-all"
+              className="mt-4 inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-sm bg-primary text-primary-foreground text-xs font-mono font-bold shadow hover:brightness-110 shrink-0 transition-all"
             >
               <MessageSquare className="w-4 h-4" />
               Join Discord Helpdesk

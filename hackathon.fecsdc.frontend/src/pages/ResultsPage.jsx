@@ -281,7 +281,7 @@ export default function ResultsPage() {
                 <Clock className="w-8 h-8 animate-pulse" />
               </div>
               <span className="font-mono text-xs font-bold uppercase tracking-wider text-accent-amber px-3 py-1 rounded-sm bg-accent-amber/10 border border-accent-amber/30 mb-5">
-                STATUS: IN EVALUATION
+                STATUS: RESULTS PENDING
               </span>
               <h2 className="text-2xl font-display font-bold text-foreground mt-3 mb-3">
                 Results will be published after judging

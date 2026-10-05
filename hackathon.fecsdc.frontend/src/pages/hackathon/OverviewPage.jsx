@@ -14,7 +14,7 @@ const hubCards = [
   {
     to: "/hackathon/register",
     title: "Registration Portal",
-    desc: "Register yourself. Compete with your fellow companions to win the title and prizes.",
+    desc: "Register to Compete with your fellow companions to conqure the prizes.",
     icon: Users,
     badge: "ACTION REQUIRED",
     highlight: true,
