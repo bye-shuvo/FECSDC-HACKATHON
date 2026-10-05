@@ -201,7 +201,11 @@ export default function RegisterPage() {
         });
       } catch (err) {
         if (err instanceof ApiClientError) {
-          if (err.status === 409 || err.fieldErrors?.email) {
+          if (err.fieldErrors?.id) {
+            dispatchErrors({ type: "SET_FIELD", name: "id", error: "This registration number is already registered." });
+            const idEl = document.querySelector('[name="id"]');
+            if (idEl) idEl.focus();
+          } else if (err.status === 409 || err.fieldErrors?.email) {
             dispatchErrors({ type: "SET_FIELD", name: "email", error: "This email is already registered." });
             const emailEl = document.querySelector('[name="email"]');
             if (emailEl) emailEl.focus();
