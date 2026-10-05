@@ -7,7 +7,6 @@ import { MOTION_SPRING_SNAPPY } from "../lib/motion.js";
 const subnavTabs = [
   { to: "/hackathon", label: "Overview", end: true },
   { to: "/hackathon/register", label: "Register", end: false },
-  { to: "/hackathon/questions", label: "Questions", end: false },
   { to: "/hackathon/about", label: "About", end: false },
   { to: "/hackathon/schedule", label: "Schedule", end: false },
   { to: "/hackathon/rules", label: "Rules", end: false },
