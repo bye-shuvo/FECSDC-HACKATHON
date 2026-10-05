@@ -155,13 +155,14 @@ export function TracksRailSection() {
                     <span>{track.target}</span>
                   </div>
 
-                  <Link
-                    to="/problem-statements"
+                  <a
+                    href="https://www.hackerrank.com/fecsdc-202610"
                     className="inline-flex items-center gap-1.5 text-xs font-label text-foreground hover:text-primary transition-colors"
+                    target="_blank"
                   >
                     <span>View specifications</span>
                     <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
+                  </a>
                 </div>
               </TiltCard>
             </div>

@@ -28,8 +28,16 @@ export const rulesData = [
   //   details: "No individual may participate in more than one team. Team composition cannot be modified after the hacking commences at 11:00 AM on Day 1.",
   //   severity: "Mandatory",
   // },
-  {
+    {
     id: 2,
+    category: "eligibility",
+    title: "Batch Priority for Same Rank",
+    summary: "If participants from Batch 12 and Batch 13 achieve the same position, Batch 13 participants will receive priority for prize eligibility.",
+    details: "In the event of a tie on final standings, students from Batch 13 will be considered ahead of Batch 12 participants for prize placement and eligibility. This rule applies only when rankings are otherwise equal.",
+    severity: "Priority",
+  },
+  {
+    id: 3,
     category: "code",
     title: "Fresh Codebases Only",
     summary: "All project code, models, and design assets must be created during the 6-hour hackathon window.",
@@ -37,7 +45,7 @@ export const rulesData = [
     severity: "Strict",
   },
   {
-    id: 3,
+    id: 4,
     category: "code",
     title: "Public Version Control",
     summary: "All projects must be hosted in a public GitHub repository created after the opening ceremony.",

@@ -10,7 +10,7 @@ export const podiumPrizes = [
   {
     rank: 2,
     place: "1st Runner Up",
-    teaserTitle: "USB drive",
+    teaserTitle: "USB Hub",
     teaserDescription: "Portable storage for project files.",
     teaserImage: usbImage,
     // amount: "৳ 15,000",
@@ -26,7 +26,7 @@ export const podiumPrizes = [
   {
     rank: 1,
     place: "Grand Champion",
-    teaserTitle: "Gaming mouse",
+    teaserTitle: "Gaming Mouse",
     teaserDescription: "Precise control for fast-paced play.",
     teaserImage: mouseImage,
     perks: [

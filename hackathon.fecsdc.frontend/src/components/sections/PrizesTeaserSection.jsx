@@ -15,8 +15,8 @@ export function PrizesTeaserSection() {
   const [championFloatRef, isChampionInView] = useSharedInView({ once: false });
   const prefersReducedMotion = useReducedMotion();
   const desktopOrder = {
-    1: "md:order-2",
-    2: "md:order-1",
+    1: "md:order-1",
+    2: "md:order-2",
     3: "md:order-3",
   };
 
@@ -53,9 +53,11 @@ export function PrizesTeaserSection() {
         >
           {orderedPrizes.map((prize) => {
             const isChampion = prize.rank === 1;
+            const isThirdPrize = prize.rank === 3;
+            const showLeftArrow = isChampion || isThirdPrize;
             const arrowMotion = prefersReducedMotion
               ? {}
-              : { x: isChampion ? [0, 7, 0] : [0, -7, 0] };
+              : { x: showLeftArrow ? [0, 7, 0] : [0, -7, 0] };
 
             return (
               <StaggerItem
@@ -66,9 +68,11 @@ export function PrizesTeaserSection() {
                 <motion.div
                   whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
                   data-cursor="view"
-                  className={`group h-full flex flex-col md:justify-center items-center text-center ${isChampion ? "md:flex-row-reverse" : "md:flex-row"}`}
+                  className={`group h-full flex flex-col md:justify-center items-center text-center ${prize.rank === 2 ? "md:flex-row-reverse" : "md:flex-row"}`}
                 >
-                  <div className={`flex h-52 w-full items-center justify-center`}>
+                  <div
+                    className={`flex h-52 w-full items-center justify-center`}
+                  >
                     <div
                       ref={isChampion ? championFloatRef : undefined}
                       className={
@@ -89,37 +93,44 @@ export function PrizesTeaserSection() {
                         height="160"
                         loading="lazy"
                         decoding="async"
-                        className={`h-48 w-48 object-contain transition-transform duration-150 ease-(--ease-fast) group-hover:-translate-y-1.5 group-hover:rotate-2 ${isChampion ? "scale-[1.5]" : prize.rank == 2 ? "scale-[1.20]" : "scale-[1.25]"}`}
+                        className={`h-48 w-48 object-contain transition-transform duration-150 ease-(--ease-fast) group-hover:-translate-y-1.5 group-hover:rotate-2 ${isChampion ? "scale-[1.5]" : prize.rank == 1 ? "scale-[1.20]" : "scale-[1.25]"}`}
                       />
                     </div>
                   </div>
                   <div className="flex flex-col h-56 w-full items-center justify-center">
-                    <div className="mt-4 flex items-center justify-center gap-3">
-                      {!isChampion && (
+                    <div className="mt-4 flex items-center justify-center gap-2">
+                      {showLeftArrow ? (
                         <motion.span
                           animate={arrowMotion}
-                          transition={{ duration: 1.2, ease: "easeInOut", repeat: Infinity }}
-                          className="hidden md:inline-flex text-primary"
+                          transition={{
+                            duration: 1.2,
+                            ease: "easeInOut",
+                            repeat: Infinity,
+                          }}
+                          className="order-1 hidden shrink-0 md:inline-flex text-primary"
                           aria-hidden="true"
                         >
                           <ArrowLeft className="h-4 w-4" />
                         </motion.span>
-                      )}
-                      <span
-                        className={`font-jetbrains-mono text-xs md:text-sm font-medium uppercase tracking-widest transition-colors duration-150 ${isChampion ? "text-primary" : "text-muted-foreground group-hover:text-primary"}`}
-                      >
-                        {prize.place}
-                      </span>
-                      {isChampion && (
+                      ) : (
                         <motion.span
                           animate={arrowMotion}
-                          transition={{ duration: 1.2, ease: "easeInOut", repeat: Infinity }}
-                          className="hidden md:inline-flex text-primary"
+                          transition={{
+                            duration: 1.2,
+                            ease: "easeInOut",
+                            repeat: Infinity,
+                          }}
+                          className="order-3 hidden shrink-0 md:inline-flex text-primary"
                           aria-hidden="true"
                         >
                           <ArrowRight className="h-4 w-4" />
                         </motion.span>
                       )}
+                      <span
+                        className={`order-2 font-jetbrains-mono text-xs md:text-sm font-medium uppercase tracking-widest transition-colors duration-150 ${isChampion ? "text-primary" : "text-muted-foreground group-hover:text-primary"}`}
+                      >
+                        {prize.place}
+                      </span>
                     </div>
                     <h3 className="mt-2 font-jetbrains-mono text-xl md:text-3xl font-bold leading-tight text-foreground">
                       {prize.teaserTitle}
