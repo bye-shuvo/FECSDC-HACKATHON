@@ -7,6 +7,7 @@ const routeLoaders = {
   "/": () => import("../pages/HomePage.jsx"),
   "/hackathon": () => import("../pages/hackathon/OverviewPage.jsx"),
   "/hackathon/register": () => import("../pages/hackathon/RegisterPage.jsx"),
+  "/hackathon/questions": () => import("../pages/ProblemStatementsPage.jsx"),
   "/hackathon/rules": () => import("../pages/hackathon/RulesPage.jsx"),
   "/hackathon/schedule": () => import("../pages/hackathon/SchedulePage.jsx"),
   "/hackathon/about": () => import("../pages/hackathon/AboutPage.jsx"),

@@ -155,7 +155,7 @@ export default function ProblemDetailPage() {
                   ← Back to statements
                 </Link>
                 <Link
-                  to="/hackathon/submit"
+                  to={`/hackathon/submit?problem=${encodeURIComponent(problem.id)}`}
                   {...submitPrefetch}
                   data-cursor="button"
                   className="inline-flex items-center justify-center px-5 py-2.5 rounded-sm bg-primary text-primary-foreground font-mono font-bold text-xs uppercase tracking-wider shadow hover:brightness-110 transition-all"

@@ -9,6 +9,7 @@ import { prefetchRoute } from "../../hooks/usePrefetchRoute.js";
 
 const hackathonSubLinks = [
   { to: "/hackathon/register", label: "Register", desc: "Claim your slot (Club members only)" },
+  { to: "/hackathon/questions", label: "Questions", desc: "Browse the contest problem statements" },
   { to: "/hackathon/about", label: "About", desc: "Format, tracks & participation mission" },
   { to: "/hackathon/schedule", label: "Schedule", desc: "6-hour timeline & checkpoints" },
   { to: "/hackathon/rules", label: "Rules & Conduct", desc: "Eligibility, requirements & judging" },

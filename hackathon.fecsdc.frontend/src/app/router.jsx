@@ -48,6 +48,10 @@ export const routes = [
             element: <RegisterPage />,
           },
           {
+            path: "questions",
+            element: <ProblemStatementsPage />,
+          },
+          {
             path: "about",
             element: <AboutPage />,
           },

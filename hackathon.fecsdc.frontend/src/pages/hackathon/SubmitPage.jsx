@@ -7,6 +7,7 @@ import {
   startTransition,
   memo,
 } from "react";
+import { useSearchParams } from "react-router";
 import { CheckCircle2, ArrowRight, AlertCircle, RefreshCw, GitBranch, FileText } from "lucide-react";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle.js";
 import { useProblemLock } from "../../hooks/useProblemLock.js";
@@ -99,6 +100,8 @@ const INITIAL_FORM = { question_id: "", user_id: "", github_url: "", readme_url:
 export default function SubmitPage() {
   useDocumentTitle("Submit Project", "Submit your hackathon project for FEC SDC Hackathon 2026.");
 
+  const [searchParams] = useSearchParams();
+  const problemKey = searchParams.get("problem");
   const { isLocked, revealDate } = useProblemLock();
 
   // ── Stable user ref (read once, never causes re-renders) ─────────────────
@@ -154,6 +157,18 @@ export default function SubmitPage() {
     ),
     []
   );
+
+  useEffect(() => {
+    if (!problemKey || !questions?.length || !formRefs.current.question_id) return;
+
+    const problem = problems.find((item) => item.id.toLowerCase() === problemKey.toLowerCase());
+    const question = questions.find((item) =>
+      String(item.id) === problemKey ||
+      (problem && item.question_text?.trim().toLowerCase() === problem.title.toLowerCase())
+    );
+
+    if (question) formRefs.current.question_id.value = String(question.id);
+  }, [problemKey, questions]);
 
   const readFormData = useCallback(() => ({
     question_id: formRefs.current.question_id?.value || "",
