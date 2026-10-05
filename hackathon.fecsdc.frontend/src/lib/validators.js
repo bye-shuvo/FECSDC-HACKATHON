@@ -44,6 +44,26 @@ export function validateName(name) {
 }
 
 /**
+ * Validates HackerRank username.
+ * Common username format: letters, numbers, underscores, hyphens.
+ * @param {string} username
+ * @returns {string|null} Error message or null if valid
+ */
+export function validateHackerrankUsername(username) {
+  const trimmed = (username || "").trim();
+  if (!trimmed) {
+    return "HackerRank username is required.";
+  }
+  if (trimmed.length < 3 || trimmed.length > 30) {
+    return "HackerRank username must be between 3 and 30 characters.";
+  }
+  if (!/^[A-Za-z0-9_-]+$/.test(trimmed)) {
+    return "Use only letters, numbers, underscores, or hyphens.";
+  }
+  return null;
+}
+
+/**
  * Validates batch against users.batch INT NOT NULL
  * Must be a positive integer, no decimals, no letters, max 4 digits (≤9999).
  * @param {string|number} batch

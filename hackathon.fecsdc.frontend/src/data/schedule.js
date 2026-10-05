@@ -7,7 +7,7 @@ const EVALUATION_DATE = "Will be notified on discord";
 export const scheduleData = [
   {
     id: "day-1",
-    day: "Day 1",
+    day: "Phase 1",
     date: "Oct 10, 2026",
     phase: "hackathon",
     phaseLabel: "Online hackathon",
@@ -42,11 +42,11 @@ export const scheduleData = [
   },
   {
     id: "day-2",
-    day: "Day 2",
+    day: "Phase 2",
     date: EVALUATION_DATE,
     phase: "evaluation",
-    phaseLabel: "Evaluation day",
-    title: "Evaluation Day",
+    phaseLabel: "Evaluation phase",
+    title: "Evaluation Phase",
     description: "Judges review submissions, shortlist members, and finalize the results.",
     events: [
       {

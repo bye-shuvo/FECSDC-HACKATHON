@@ -14,7 +14,7 @@ import { Button } from "../../components/ui/Button.jsx";
 import { Badge } from "../../components/ui/Badge.jsx";
 import { Card } from "../../components/ui/Card.jsx";
 import { Reveal } from "../../components/motion/Reveal.jsx";
-import { validateId, validateName, validateBatch, validateEmail } from "../../lib/validators.js";
+import { validateId, validateName, validateBatch, validateEmail, validateHackerrankUsername } from "../../lib/validators.js";
 import { apiFetch, ApiClientError } from "../../lib/api.js";
 import { prefetchQuestionsData } from "../../hooks/usePrefetchRoute.js";
 
@@ -26,7 +26,7 @@ const CONFETTI_PILLS = [1, 2, 3, 4, 5, 6, 7, 8];
 
 // ─── useReducer for form state (avoids full re-render on each field change) ──
 
-const INITIAL_FORM = { id: "", name: "", batch: "", email: "", consent: false };
+const INITIAL_FORM = { id: "", name: "", hackerrank_username: "", batch: "", email: "", consent: false };
 
 async function _registerFn(payload, signal) {
   return apiFetch(siteConfig.registrationEndpoint, {
@@ -74,7 +74,7 @@ export default function RegisterPage() {
   const fieldRefs = useRef({});
   const fieldRefCallbacks = useMemo(
     () => Object.fromEntries(
-      ["id", "name", "batch", "email", "consent"].map((name) => [
+      ["id", "name", "hackerrank_username", "batch", "email", "consent"].map((name) => [
         name,
         (element) => { fieldRefs.current[name] = element; },
       ])
@@ -104,6 +104,7 @@ export default function RegisterPage() {
     let error = null;
     if (name === "id") error = validateId(value);
     else if (name === "name") error = validateName(value);
+    else if (name === "hackerrank_username") error = validateHackerrankUsername(value);
     else if (name === "batch") error = validateBatch(value);
     else if (name === "email") error = validateEmail(value);
     else if (name === "consent" && !checked) error = "You must confirm club membership and accept rules.";
@@ -114,6 +115,7 @@ export default function RegisterPage() {
     const formData = {
       id: fieldRefs.current.id?.value || "",
       name: fieldRefs.current.name?.value || "",
+      hackerrank_username: fieldRefs.current.hackerrank_username?.value || "",
       batch: fieldRefs.current.batch?.value || "",
       email: fieldRefs.current.email?.value || "",
       consent: Boolean(fieldRefs.current.consent?.checked),
@@ -123,6 +125,8 @@ export default function RegisterPage() {
     if (idErr) newErrors.id = idErr;
     const nameErr = validateName(formData.name);
     if (nameErr) newErrors.name = nameErr;
+    const hackerErr = validateHackerrankUsername(formData.hackerrank_username);
+    if (hackerErr) newErrors.hackerrank_username = hackerErr;
     const batchErr = validateBatch(formData.batch);
     if (batchErr) newErrors.batch = batchErr;
     const emailErr = validateEmail(formData.email);
@@ -157,6 +161,7 @@ export default function RegisterPage() {
       const formData = {
         id: fieldRefs.current.id?.value || "",
         name: fieldRefs.current.name?.value || "",
+        hackerrank_username: fieldRefs.current.hackerrank_username?.value || "",
         batch: fieldRefs.current.batch?.value || "",
         email: fieldRefs.current.email?.value || "",
         consent: Boolean(fieldRefs.current.consent?.checked),
@@ -165,6 +170,7 @@ export default function RegisterPage() {
       const payload = {
         id: Number(formData.id),
         name: formData.name.trim().replace(/\s+/g, " "),
+        hackerrank_username: formData.hackerrank_username.trim(),
         batch: Number(formData.batch),
         email: formData.email.trim().toLowerCase(),
       };
@@ -527,23 +533,21 @@ export default function RegisterPage() {
                         </ShakeField>
                       </div>
 
-                      {/* Row 2: Email + Batch */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                        <ShakeField hasError={!!errors.email}>
+                        <ShakeField hasError={!!errors.hackerrank_username}>
                           <Input
-                            label="Email address"
-                            name="email"
-                            type="email"
-                            placeholder="e.g. hacker@fec.edu.bd"
-                            ref={fieldRefCallbacks.email}
-                            defaultValue={INITIAL_FORM.email}
+                            label="HackerRank username"
+                            name="hackerrank_username"
+                            placeholder="e.g. zubair_ahmed"
+                            ref={fieldRefCallbacks.hackerrank_username}
+                            defaultValue={INITIAL_FORM.hackerrank_username}
                             onChange={handleChange}
                             onBlur={handleBlur}
-                            error={errors.email}
+                            error={errors.hackerrank_username}
+                            helperText="Use your public HackerRank username."
                             required
                           />
                         </ShakeField>
-
                         <ShakeField hasError={!!errors.batch}>
                           <Input
                             label="Batch"
@@ -563,6 +567,25 @@ export default function RegisterPage() {
                             required
                           />
                         </ShakeField>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div className="sm:col-span-2">
+                          <ShakeField hasError={!!errors.email}>
+                            <Input
+                              label="Email address"
+                              name="email"
+                              type="email"
+                              placeholder="e.g. hacker@fec.edu.bd"
+                              ref={fieldRefCallbacks.email}
+                              defaultValue={INITIAL_FORM.email}
+                              onChange={handleChange}
+                              onBlur={handleBlur}
+                              error={errors.email}
+                              required
+                            />
+                          </ShakeField>
+                        </div>
                       </div>
                     </div>
 

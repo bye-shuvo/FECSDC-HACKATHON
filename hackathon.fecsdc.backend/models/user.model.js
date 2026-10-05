@@ -8,9 +8,9 @@ async function getUserById(db, id) {
   return result.rows?.[0] || null;
 }
 
-async function createUser(db, {id, name, email, batch }) {
-  const result = await db.execute('INSERT INTO users (id, name, email, batch) VALUES (?, ?, ?, ?)', [id, name, email, batch]);
-  return { id, name, email, batch };
+async function createUser(db, {id, name, email, hackerrank_username, batch }) {
+  const result = await db.execute('INSERT INTO users (id, name, email, hackerrank_username, batch) VALUES (?, ?, ?, ?, ?)', [id, name, email, hackerrank_username, batch]);
+  return { id, name, email, hackerrank_username, batch };
 }
 
 module.exports = { getUserByEmail, getUserById, createUser };
