@@ -111,14 +111,27 @@ export default function ChallengesPage() {
                       </span>
                     </div>
 
+                    {track.id === "track-1" ? (
+                    <a
+                      href="https://www.hackerrank.com/fecsdc-202610"
+                      data-cursor="link"
+                      className="group inline-flex items-center gap-1.5 text-xs font-mono font-bold text-primary hover:text-accent-amber transition-colors"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <span>Problem Details</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </a>
+                  ) : (
                     <Link
-                      to="/problem-statements"
+                      to={"/problem-statements"}
                       data-cursor="link"
                       className="group inline-flex items-center gap-1.5 text-xs font-mono font-bold text-primary hover:text-accent-amber transition-colors"
                     >
                       <span>Problem Details</span>
-                      <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                      <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
+                  )}
                   </div>
                 </TiltCard>
               </Reveal>
