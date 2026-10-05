@@ -207,6 +207,13 @@
     cursor: text !important;
   }
 
+  /* Remove 300ms tap delay on mobile without disabling pinch-zoom.
+     touch-action:manipulation = allow tap + double-tap but no pan-x/y tricks.
+     Apply to all interactive elements. */
+  a, button, [role="button"], [data-cursor], label, summary {
+    touch-action: manipulation;
+  }
+
   body {
     min-height: 100svh;
     background: var(--background);
@@ -378,4 +385,17 @@
     animation: none !important;
     transform: none !important;
   }
+}
+
+/* ============================================================
+   TAB-HIDDEN: Pause CSS animations when the tab is not visible.
+   JS sets data-tab-hidden="true" on <html> via visibilitychange.
+   This stops the compositor from running CSS keyframe animations
+   (marquee, hero-float) when no pixels are being displayed.
+   ============================================================ */
+html[data-tab-hidden="true"] .animate-marquee,
+html[data-tab-hidden="true"] .animate-marquee-slow,
+html[data-tab-hidden="true"] .animate-marquee-reverse,
+html[data-tab-hidden="true"] .animate-hero-float {
+  animation-play-state: paused !important;
 }

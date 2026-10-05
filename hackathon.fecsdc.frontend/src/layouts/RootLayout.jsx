@@ -11,9 +11,14 @@ import { SiteLoader } from "../components/motion/SiteLoader.jsx";
 import { RouteTransition } from "../components/motion/RouteTransition.jsx";
 import { LoaderProvider } from "../hooks/useLoaderDone.js";
 import { ErrorBoundaryClass } from "../components/layout/ErrorBoundary.jsx";
+import { shouldUseStaticPointerEffects } from "../lib/motion.js";
 
 function LayoutContent() {
   const location = useLocation();
+  const staticEffects = shouldUseStaticPointerEffects();
+
+  // Scroll progress bar — disabled on low/static tier to avoid a scroll listener
+  // that wakes the JS thread on every scroll frame alongside all other handlers.
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
