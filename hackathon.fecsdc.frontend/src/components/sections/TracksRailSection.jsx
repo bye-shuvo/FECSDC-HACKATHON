@@ -1,30 +1,40 @@
 import { useRef } from "react";
 import { Link } from "react-router";
-import { ArrowRight, Cpu, Terminal, Shield, Sparkles, ChevronRight, ChevronLeft } from "lucide-react";
+import {
+  ArrowRight,
+  Cpu,
+  Terminal,
+  Shield,
+  Sparkles,
+  ChevronRight,
+  ChevronLeft,
+} from "lucide-react";
 import { Section, Container } from "../ui/Section.jsx";
 import { SectionPillMarker, PillMark } from "../ui/PillDividers.jsx";
 import { TiltCard } from "../ui/TiltCard.jsx";
 import { Badge } from "../ui/Badge.jsx";
 import { Button } from "../ui/Button.jsx";
 
-const railTracks = [{
-  id: "track-1",
-  num: "01",
-  title: "Problem Solving",
-  icon: Cpu,
-  tag: "Problem Solving",
-  summary: "Solve real-world problems with your creativity and innovation.",
-  target: "Problem Solving",
-},
-{
-  id: "track-2",
-  num: "02",
-  title: "Web Development",
-  icon: Terminal,
-  tag: "Web Development",
-  summary: "Build innovative web applications with your creativity and innovation.",
-  target: "Web Development",
-},
+const railTracks = [
+  {
+    id: "track-1",
+    num: "01",
+    title: "Problem Solving",
+    icon: Cpu,
+    tag: "Problem Solving",
+    summary: "Solve real-world problems with your creativity and innovation.",
+    target: "Problem Solving",
+  },
+  {
+    id: "track-2",
+    num: "02",
+    title: "Web Development",
+    icon: Terminal,
+    tag: "Web Development",
+    summary:
+      "Build innovative web applications with your creativity and innovation.",
+    target: "Web Development",
+  },
   // {
   //   id: "track-3",
   //   num: "03",
@@ -56,8 +66,12 @@ export function TracksRailSection() {
     dragRef.current.scrollLeft = scrollRef.current.scrollLeft;
   };
 
-  const handleMouseLeave = () => { dragRef.current.isDragging = false; };
-  const handleMouseUp = () => { dragRef.current.isDragging = false; };
+  const handleMouseLeave = () => {
+    dragRef.current.isDragging = false;
+  };
+  const handleMouseUp = () => {
+    dragRef.current.isDragging = false;
+  };
 
   const handleMouseMove = (e) => {
     if (!dragRef.current.isDragging || !scrollRef.current) return;
@@ -82,7 +96,8 @@ export function TracksRailSection() {
               Choose Your <span className="gradient-text-brand">Domain</span>
             </h2>
             <p className="text-sm text-muted-foreground mt-1 max-w-xl">
-              Explore our 2 engineering tracks. Detailed problem briefs unlock on hackathon day.
+              Explore our 2 engineering tracks. Detailed problem briefs unlock
+              on hackathon day.
             </p>
           </div>
 
@@ -124,7 +139,10 @@ export function TracksRailSection() {
               key={track.id}
               className="snap-start shrink-0 w-75 sm:w-85 md:w-95 h-90"
             >
-              <TiltCard maxTilt={6} className="p-6 flex md:flex-col justify-between h-full bg-card border-border">
+              <TiltCard
+                maxTilt={6}
+                className="p-6 flex md:flex-col justify-between h-full bg-card border-border"
+              >
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="w-10 h-10 rounded-sm bg-muted border border-border flex items-center justify-center text-primary">
@@ -155,14 +173,25 @@ export function TracksRailSection() {
                     <span>{track.target}</span>
                   </div>
 
-                  <a
-                    href="https://www.hackerrank.com/fecsdc-202610"
-                    className="inline-flex items-center gap-1.5 text-xs font-label text-foreground hover:text-primary transition-colors"
-                    target="_blank"
-                  >
-                    <span>View specifications</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </a>
+                  {track.id === "track-1" ? (
+                    <a
+                      href="https://www.hackerrank.com/fecsdc-202610"
+                      className="inline-flex items-center gap-1.5 text-xs font-label text-foreground hover:text-primary transition-colors"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <span>View specifications</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </a>
+                  ) : (
+                    <Link
+                      to={"/problem-statements"}
+                      className="inline-flex items-center gap-1.5 text-xs font-label text-foreground hover:text-primary transition-colors"
+                    >
+                      <span>View specifications</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  )}
                 </div>
               </TiltCard>
             </div>
