@@ -63,6 +63,10 @@ async function register(req, res) {
     throw httpError(400, "ID is required and must be a positive integer.");
 
   const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
+  const hackerrankUsername =
+    typeof req.body?.hackerrank_username === "string"
+      ? req.body.hackerrank_username.trim()
+      : "";
   const email =
     typeof req.body?.email === "string"
       ? req.body.email.trim().toLowerCase()
@@ -74,6 +78,12 @@ async function register(req, res) {
       400,
       "Name is required and must be at most 100 characters.",
     );
+  if (!hackerrankUsername || hackerrankUsername.length < 3 || hackerrankUsername.length > 30 || !/^[A-Za-z0-9_-]+$/.test(hackerrankUsername)) {
+    throw httpError(
+      400,
+      "HackerRank username is required and must be 3-30 chars using letters, numbers, underscores, or hyphens.",
+    );
+  }
   if (!batch)
     throw httpError(400, "Batch is required and must be a positive integer.");
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 255) {
@@ -84,7 +94,7 @@ async function register(req, res) {
   if (await getUserByEmail(db, email))
     throw httpError(409, "A user with this email already exists.");
 
-  const user = await createUser(db, {id, name, email, batch });
+  const user = await createUser(db, { id, name, hackerrank_username: hackerrankUsername, email, batch });
   res.status(201).json({ user });
 }
 

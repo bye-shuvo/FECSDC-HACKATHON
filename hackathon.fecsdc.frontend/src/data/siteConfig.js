@@ -46,7 +46,7 @@ export const siteConfig = {
   eventDate: isoDate(import.meta.env.VITE_EVENT_DATE, "2026-10-04T09:00:00+06:00"),
   eventEndDate: isoDate(import.meta.env.VITE_EVENT_END_DATE, "2026-10-04T09:00:00+06:00"),
   problemRevealDate: isoDate(import.meta.env.VITE_PROBLEM_REVEAL_DATE, "2026-10-05T10:00:00+06:00"),
-  registrationDeadline: isoDate(import.meta.env.VITE_REGISTRATION_DEADLINE, "2026-10-01T23:59:59+06:00"),
+  registrationDeadline: isoDate(import.meta.env.VITE_REGISTRATION_DEADLINE, "2026-10-10T23:59:59+06:00"),
 
   // Registration controls
   registrationOpen: bool(import.meta.env.VITE_REGISTRATION_OPEN, true),
