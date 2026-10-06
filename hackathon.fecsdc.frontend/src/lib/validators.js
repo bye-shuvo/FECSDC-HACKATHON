@@ -40,6 +40,9 @@ export function validateName(name) {
   if (trimmed.length > 100) {
     return "Name must not exceed 100 characters.";
   }
+  if (!/^[A-Za-z][A-Za-z\s'._-]*$/.test(trimmed)) {
+    return "Use letters, spaces, apostrophes, periods, dashes, or underscores.";
+  }
   return null;
 }
 

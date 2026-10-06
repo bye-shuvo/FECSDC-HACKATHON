@@ -35,6 +35,7 @@ dist-ssr
 .claude
 /src/data/problems.js
 /src/data/results.js
+/src/lib/validators.test.js
 
 # Editor directories and files
 .vscode/*

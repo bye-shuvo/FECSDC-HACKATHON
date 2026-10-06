@@ -73,10 +73,10 @@ async function register(req, res) {
       : "";
   const batch = parseId(req.body?.batch);
 
-  if (!name || name.length > 100)
+  if (!name || name.length > 100 || !/^[A-Za-z][A-Za-z\s'._-]*$/.test(name))
     throw httpError(
       400,
-      "Name is required and must be at most 100 characters.",
+      "Name must use letters, spaces, apostrophes, periods, dashes, or underscores.",
     );
   if (!hackerrankUsername || hackerrankUsername.length < 3 || hackerrankUsername.length > 30 || !/^[A-Za-z0-9_-]+$/.test(hackerrankUsername)) {
     throw httpError(
