@@ -10,10 +10,7 @@ const { initializeDatabase } = require('./config/config');
 
 const app = express();
 const allowedOrigins = [
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
   'https://hackathonfecsdc.vercel.app',
-  'https://fecsdc-hackathon-backend.onrender.com'
 ];
 
 const corsOptions = {
