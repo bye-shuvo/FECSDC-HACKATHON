@@ -1,5 +1,11 @@
 # Yousuf's Changes Summary
 
+## Security and Backend Dependencies
+
+- Added client-side validation to reject HTML and script-like characters in the registration name.
+- Added matching backend validation so unsafe names are rejected before database insertion.
+- Added regression tests covering malicious input and valid names.
+
 ## Registration: HackerRank Username
 
 - Added a required `hackerrank_username` field to the registration form.
