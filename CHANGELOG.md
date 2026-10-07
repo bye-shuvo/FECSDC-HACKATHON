@@ -55,8 +55,9 @@ Remove or replace the demo problems and restore the intended reveal date before 
 
 # Shuvo's Changes Summary
 
+- Fixed the registration flow so already-registered users are not shown the registration form (commit `994aba3`).
 - Added an interactive schedule timeline with scroll-based milestone tracking.
 - Refined mobile layouts and content across the schedule, challenge, results, FAQ, and home-page track and prize sections.
 - Updated challenge and results messaging, registration copy, prize and rules data, and the FAQ Discord helpdesk link.
 - Improved the submission-page flow and fixed challenge problem links.
-- Removed `localhost` from the backend CORS allowed origins.
+- Removed `localhost` from the backend CORS allowed origins (commit `76d07e5`).
