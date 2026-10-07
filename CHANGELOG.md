@@ -44,10 +44,19 @@ These edits remain uncommitted and are intended for local testing:
 
 Remove or replace the demo problems and restore the intended reveal date before production. The fallback demo statements are used only when the real local problem data module is unavailable.
 
-## Verification and Commits
+## Git Changes and Verification
 
 - Frontend production build passed with `npm run build` after the navigation and prize teaser updates.
 - Demo problem exports were checked for the fields required by the list and detail pages.
 - Pushed commit `ec486ad`: `[add] add HackerRank registration field and update schedule`.
 - Pushed commit `83b2e8a`: `[add] add questions navigation and challenge preselection`.
 - The two local testing-data edits above are not included in those commits.
+
+
+# Shuvo's Changes Summary
+
+- Added an interactive schedule timeline with scroll-based milestone tracking.
+- Refined mobile layouts and content across the schedule, challenge, results, FAQ, and home-page track and prize sections.
+- Updated challenge and results messaging, registration copy, prize and rules data, and the FAQ Discord helpdesk link.
+- Improved the submission-page flow and fixed challenge problem links.
+- Removed `localhost` from the backend CORS allowed origins.

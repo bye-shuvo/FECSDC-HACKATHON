@@ -1,5 +1,4 @@
-import { useReducer, useRef, useCallback, useMemo, useState, useEffect, startTransition, memo } from "react";
-import { Link } from "react-router";
+import { useReducer, useRef, useCallback, useMemo, useState, useEffect, useSyncExternalStore, startTransition, memo } from "react";
 import { ShieldCheck, CheckCircle2, ArrowRight, AlertCircle, Lock } from "lucide-react";
 import { motion } from "motion/react";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle.js";
@@ -16,7 +15,9 @@ import { Card } from "../../components/ui/Card.jsx";
 import { Reveal } from "../../components/motion/Reveal.jsx";
 import { validateId, validateName, validateBatch, validateEmail, validateHackerrankUsername } from "../../lib/validators.js";
 import { apiFetch, ApiClientError } from "../../lib/api.js";
+import { clearUser, getUserSnapshot, saveUser, subscribeUser } from "../../lib/session.js";
 import { prefetchQuestionsData } from "../../hooks/usePrefetchRoute.js";
+import { AlreadyRegistered } from "../../components/sections/AlreadyRegistered.jsx";
 
 
 // ─── Hoisted statics ─────────────────────────────────────────────────────────
@@ -60,10 +61,63 @@ const DeadlineCard = memo(function DeadlineCard() {
   );
 });
 
+const RegisteredUserReveal = memo(function RegisteredUserReveal({ user, onSwitch }) {
+  return (
+    <Reveal>
+      <AlreadyRegistered user={user} onSwitch={onSwitch} />
+    </Reveal>
+  );
+});
+
 export default function RegisterPage() {
   useDocumentTitle("Registration", "Register for FEC SDC Hackathon 2026.");
-
   const registrationLock = useRegistrationLock();
+  const user = useSyncExternalStore(subscribeUser, getUserSnapshot, () => null);
+  const registeredThisMount = useRef(false);
+  const focusAfterSwitch = useRef(false);
+
+  const handleSwitch = useCallback(() => {
+    focusAfterSwitch.current = true;
+    clearUser();
+  }, []);
+  const markRegistered = useCallback(() => {
+    registeredThisMount.current = true;
+  }, []);
+  const markFocusHandled = useCallback(() => {
+    focusAfterSwitch.current = false;
+  }, []);
+
+  if (user && !registeredThisMount.current) {
+    return (
+      <Section spacing="compact">
+        <Container>
+          <PageHeader
+            eyebrow="APPLICATION PORTAL"
+            title="Individual"
+            highlightWord="Registration"
+            description="You have already completed registration."
+            breadcrumbs={[
+              { to: "/hackathon", label: "Hackathon" },
+              { label: "Register" },
+            ]}
+          />
+          <RegisteredUserReveal user={user} onSwitch={handleSwitch} />
+        </Container>
+      </Section>
+    );
+  }
+
+  return (
+    <RegisterForm
+      registrationLock={registrationLock}
+      onRegistered={markRegistered}
+      focusOnMount={focusAfterSwitch.current}
+      onFocusHandled={markFocusHandled}
+    />
+  );
+}
+
+function RegisterForm({ registrationLock, onRegistered, focusOnMount, onFocusHandled }) {
 
   const [errors, dispatchErrors] = useReducer(errorsReducer, {});
   const [submittedForm, setSubmittedForm] = useState(INITIAL_FORM);
@@ -81,6 +135,13 @@ export default function RegisterPage() {
     ),
     []
   );
+
+  useEffect(() => {
+    if (!focusOnMount || !fieldRefs.current.name) return;
+    fieldRefs.current.name.focus();
+    onFocusHandled();
+  }, [focusOnMount, onFocusHandled]);
+
   const { isPending: submitting, mutate: register } = useMutation(_registerFn);
   const registrationLockRef = useRef(registrationLock);
   registrationLockRef.current = registrationLock;
@@ -177,20 +238,13 @@ export default function RegisterPage() {
 
       try {
         await register(payload);
-
-        try {
-          localStorage.setItem(
-            "fecsdc_user",
-            JSON.stringify({
-              id: payload.id,
-              email: payload.email,
-              name: payload.name,
-              batch: payload.batch,
-            })
-          );
-        } catch {
-          // Safe fallback if storage is restricted
-        }
+        onRegistered();
+        saveUser({
+          id: payload.id,
+          email: payload.email,
+          name: payload.name,
+          batch: payload.batch,
+        });
 
         // Warm the questions cache so SubmitPage renders instantly on next visit
         prefetchQuestionsData();
@@ -228,7 +282,7 @@ export default function RegisterPage() {
         submittingRef.current = false;
       }
     },
-    [register, submitting, validate]
+    [onRegistered, register, submitting, validate]
   );
 
   const { submitted, serverError } = uiState;
