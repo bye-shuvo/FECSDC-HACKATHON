@@ -1,11 +1,31 @@
 const { getDatabase } = require("../config/config");
-const { getQuestionById, getQuestions } = require("../models/question.model");
+const { mapQuestion } = require("../lib/questionMapper");
 const { createSubmission } = require("../models/submission.model");
 const {
   createUser,
   getUserByEmail,
   getUserById,
 } = require("../models/user.model");
+
+// Boot-time validation of PROBLEMS_REVEAL_AT (fail-closed if missing or invalid)
+const rawRevealAt = process.env.PROBLEMS_REVEAL_AT;
+let revealTimestamp = null;
+
+if (!rawRevealAt) {
+  console.warn("[gate] WARNING: PROBLEMS_REVEAL_AT is missing. Keeping questions locked.");
+} else {
+  const parsed = Date.parse(rawRevealAt);
+  if (Number.isNaN(parsed)) {
+    console.warn(`[gate] WARNING: PROBLEMS_REVEAL_AT is invalid ('${rawRevealAt}'). Keeping questions locked.`);
+  } else {
+    revealTimestamp = parsed;
+  }
+}
+
+function isQuestionsLocked() {
+  if (revealTimestamp === null) return true;
+  return Date.now() < revealTimestamp;
+}
 
 function httpError(status, message) {
   const error = new Error(message);
@@ -101,17 +121,38 @@ async function register(req, res) {
 }
 
 async function getQuestionsHandler(req, res) {
-  const questions = await getQuestions(getDatabase());
-  res.json({ questions });
+  if (isQuestionsLocked()) {
+    res.set("Cache-Control", "no-store");
+    return res.status(403).json({ error: "locked", revealAt: rawRevealAt || null });
+  }
+
+  const db = getDatabase();
+  const result = await db.execute(
+    "SELECT id, category, question_text, score, details, created_at FROM questions ORDER BY id ASC"
+  );
+  const rows = Array.isArray(result?.rows) ? result.rows : [];
+  res.set("Cache-Control", "public, max-age=60");
+  res.json({ questions: rows.map(mapQuestion) });
 }
 
 async function getQuestion(req, res) {
-  const id = parseId(req.params.pk);
-  if (!id) throw httpError(400, "Question ID must be a positive integer.");
+  if (isQuestionsLocked()) {
+    res.set("Cache-Control", "no-store");
+    return res.status(403).json({ error: "locked", revealAt: rawRevealAt || null });
+  }
 
-  const question = await getQuestionById(getDatabase(), id);
-  if (!question) throw httpError(404, "Question not found.");
-  res.json({ question });
+  const id = parseId(req.params.pk);
+  if (!id) throw httpError(404, "Question not found.");
+
+  const db = getDatabase();
+  const result = await db.execute(
+    "SELECT id, category, question_text, score, details, created_at FROM questions WHERE id = ?",
+    [id]
+  );
+  const row = result?.rows?.[0];
+  if (!row) throw httpError(404, "Question not found.");
+  res.set("Cache-Control", "public, max-age=60");
+  res.json({ question: mapQuestion(row) });
 }
 
 async function submitAnswer(req, res) {

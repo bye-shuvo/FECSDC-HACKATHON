@@ -57,10 +57,10 @@ export const siteConfig = {
   // TODO: Set your backend API endpoint for registration POST ({ name, batch, email })
   registrationEndpoint: str(import.meta.env.VITE_REGISTRATION_ENDPOINT, "/api/register"),
   // TODO: Set your backend API endpoint for fetching questions GET
-  questionsEndpoint: str(import.meta.env.VITE_QUESTIONS_ENDPOINT, ""),
+  questionsEndpoint: str(import.meta.env.VITE_QUESTIONS_ENDPOINT, "/api/questions"),
+  questionEndpoint: str(import.meta.env.VITE_QUESTION_ENDPOINT, "/api/question"),
   // TODO: Set your backend API endpoint for project submission POST ({ question_id, user_id, github_url, readme_url })
   submissionEndpoint: str(import.meta.env.VITE_SUBMISSION_ENDPOINT, "/api/submit"),
-  problemsEndpoint: str(import.meta.env.VITE_PROBLEMS_ENDPOINT, "/api/problems"),
   resultsEndpoint: str(import.meta.env.VITE_RESULTS_ENDPOINT, "/api/results"),
 
   // Contact & Socials

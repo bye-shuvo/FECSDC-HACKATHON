@@ -1,7 +1,8 @@
 CREATE TABLE IF NOT EXISTS questions (
   id INT AUTO_INCREMENT PRIMARY KEY,
   category VARCHAR(100) NOT NULL,
-  question_text TEXT NOT NULL,
+  question_text TEXT NOT NULL, -- question_title
+  details JSON NULL,  -- difficulty, summary, statement, constraints[], deliverables[], judging[{label,weight}]
   score INT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

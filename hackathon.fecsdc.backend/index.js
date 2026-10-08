@@ -6,11 +6,13 @@ dotenv.config();
 const express = require('express');
 const path = require('node:path');
 const homeRouter = require('./routes/router');
+const adminRouter = require('./routes/admin');
 const { initializeDatabase } = require('./config/config');
 
 const app = express();
 const allowedOrigins = [
   'https://hackathonfecsdc.vercel.app',
+  'http://localhost:5173'
 ];
 
 const corsOptions = {
@@ -26,11 +28,16 @@ const corsOptions = {
   credentials: true,
 };
 
+const corsMiddleware = cors(corsOptions);
+
 app.use(express.json({ limit: '32kb' }));
-app.use(cors(corsOptions));
+app.use((req, res, next) =>
+  req.path.startsWith('/admin') ? next() : corsMiddleware(req, res, next)
+);
 app.options(/.*/, cors(corsOptions));
 app.use('/api-workbench', express.static(path.join(__dirname, 'frontend')));
 app.use(homeRouter);
+app.use('/admin', adminRouter);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
@@ -38,7 +45,7 @@ app.use((req, res) => {
 
 app.use((error, req, res, next) => {
   const duplicate = error.details?.code === 'ER_DUP_ENTRY' || /duplicate entry/i.test(error.message || '');
-  const status = error.status || (duplicate ? 409 : 500);
+  const status = error.status || (error.message === 'Not allowed by CORS' ? 403 : (duplicate ? 409 : 500));
   if (status >= 500) console.error(error);
   res.status(status).json({ error: status < 500 ? error.message : 'Internal server error' });
 });
