@@ -9,7 +9,7 @@ export const faqData = [
     id: "faq-1",
     category: "General",
     question: "Who is eligible to participate in FEC SDC Hackathon 2026?",
-    answer: "Participation is exclusively reserved for currently enrolled students of Faridpur Engineering College who are registered members of the Software Development Club (FEC SDC). Both beginners and seasoned engineers are encouraged to participate.",
+    answer: "Participation is exclusively reserved for currently enrolled students of batch 12 & batch 13 of Faridpur Engineering College who are registered members of the Software Development Club (FEC SDC). Both beginners and seasoned engineers are encouraged to participate.",
   },
   {
     id: "faq-2",
@@ -27,13 +27,13 @@ export const faqData = [
     id: "faq-4",
     category: "Hacking & Code",
     question: "Can we start writing code or design before the hackathon begins?",
-    answer: "No. In the spirit of fair competition, all code, UI designs, and database models must be conceived and created during the official 48-hour hacking window. You may, however, explore libraries, study documentation, and brainstorm abstract ideas prior to the kickoff.",
+    answer: "No. In the spirit of fair competition, all code, UI designs, and database models must be conceived and created during the official 6-hour hacking window. You may, however, explore libraries, study documentation, and brainstorm abstract ideas prior to the kickoff.",
   },
   {
     id: "faq-5",
     category: "Hacking & Code",
     question: "What technologies or programming languages are permitted?",
-    answer: "You are completely free to use any tech stack: React, Vue, Next.js, Node.js, Python, Go, Rust, Flutter, C++, Docker, or cloud native serverless. Open-source libraries, UI packages, and public AI APIs are permitted as long as they are properly credited in your repository README.",
+    answer: "You are completely free to use any language for problem solving. However for web building competition tech stack would be: HTML, CSS, JAVASCRIPT(as it is a beginner oriented competition). and public AI APIs are permitted as long as they are properly credited in your repository README.",
   },
   {
     id: "faq-6",
@@ -44,7 +44,7 @@ export const faqData = [
   {
     id: "faq-7",
     category: "Registration",
-    question: "What happens if a team member cannot attend in person?",
-    answer: "While we recommend working together at the FEC campus hacking arena for maximum energy, hybrid collaboration is supported. At least one team representative must be present (or join via video bridge) for the live jury demo on Day 3.",
+    question: "What if I cannot attend in person as a solo participant?",
+    answer: "Since this is a solo hackathon, you are expected to work independently. If you cannot attend the venue on a given day, you may still participate remotely and join the live jury demo via video call when required.",
   },
 ];
