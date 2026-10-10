@@ -339,7 +339,7 @@ function RegisterForm({ registrationLock, onRegistered, focusOnMount, onFocusHan
 
                 {siteConfig.clubMembersOnly && (
                   <p className="text-xs md:text-sm text-muted-foreground max-w-md leading-relaxed">
-                    Only enrolled FEC students with valid SDC club registrations may compete. Non-member entries will be rejected at student ID validation.
+                    Only enrolled FEC students of batch-12 & batch-13 with valid SDC club registrations may compete. Non-member entries will be rejected at student ID validation.
                   </p>
                 )}
 
@@ -353,11 +353,12 @@ function RegisterForm({ registrationLock, onRegistered, focusOnMount, onFocusHan
                 </div>
 
                 <a
-                  href={`mailto:${siteConfig.contactEmail}`}
+                  href={`${siteConfig.discordInvite}`}
                   data-cursor="link"
+                  target="_blank"
                   className="text-xs font-mono text-primary underline underline-offset-2 hover:text-accent-amber focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2 rounded"
                 >
-                  Contact {siteConfig.contactEmail}
+                  Message on {siteConfig.discordInvite}
                 </a>
               </div>
 
