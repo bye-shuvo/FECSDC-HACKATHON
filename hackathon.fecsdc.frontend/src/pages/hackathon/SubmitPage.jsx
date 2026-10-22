@@ -8,9 +8,10 @@ import {
   memo,
 } from "react";
 import { useSearchParams } from "react-router";
-import { CheckCircle2, ArrowRight, AlertCircle, RefreshCw, GitBranch, FileText } from "lucide-react";
+import { CheckCircle2, ArrowRight, AlertCircle, RefreshCw, GitBranch, FileText, Lock } from "lucide-react";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle.js";
 import { useProblemLock } from "../../hooks/useProblemLock.js";
+import { useSubmissionLock } from "../../hooks/useSubmissionLock.js";
 import { useQuery, useMutation } from "../../hooks/useApiQuery.js";
 import { siteConfig } from "../../data/siteConfig.js";
 import { problems } from "../../data/loadData.js";
@@ -103,18 +104,23 @@ export default function SubmitPage() {
   const [searchParams] = useSearchParams();
   const problemKey = searchParams.get("problem");
   const { isLocked, revealDate } = useProblemLock();
+  const { isClosed: hookClosed, deadline } = useSubmissionLock();
+  const [serverClosed, setServerClosed] = useState(false);
+  const isClosed = hookClosed || serverClosed;
+
+  const isClosedRef = useRef(isClosed);
+  isClosedRef.current = isClosed;
 
   // ── Stable user ref (read once, never causes re-renders) ─────────────────
   const [storedUser, setStoredUser] = useState(() => {
     const user = readStoredUser();
     return Number.isInteger(user?.id) && user.id > 0 ? user : null;
   });
-  const [showRegistrationField, setShowRegistrationField] = useState(() => !storedUser);
-  const [focusRegistrationField, setFocusRegistrationField] = useState(false);
   const autoUserId = storedUser?.id ?? null;
 
   // ── Questions via useQuery (cached, SWR, no re-load on revisit) ──────────
-  const questionsUrl = siteConfig.questionsEndpoint || null;
+  // Skip the questions fetch while closed (pass url null)
+  const questionsUrl = isClosed ? null : (siteConfig.questionsEndpoint || null);
   const {
     data: remoteQuestions,
     error: questionsError,
@@ -126,9 +132,9 @@ export default function SubmitPage() {
   const [fallbackQuestions, setFallbackQuestions] = useState(null);
 
   useEffect(() => {
-    if (questionsUrl) return;
+    if (isClosed || questionsUrl) return;
     startTransition(() => setFallbackQuestions(buildFallbackQuestions(problems)));
-  }, [questionsUrl]);
+  }, [isClosed, questionsUrl]);
 
   const questions = useMemo(() => {
     if (remoteQuestions) {
@@ -141,202 +147,20 @@ export default function SubmitPage() {
     return null; // still loading
   }, [fallbackQuestions, remoteQuestions, questionsUrl]);
 
-  // ── Form state ──────────────────────────────────────────────────────────
   const [submittedForm, setSubmittedForm] = useState(INITIAL_FORM);
-  const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
-  const [serverError, setServerError] = useState("");
-  const submitLockRef = useRef(false);
-  const formRefs = useRef({});
-  const fieldRefCallbacks = useMemo(
-    () => Object.fromEntries(
-      ["question_id", "user_id", "github_url", "readme_url"].map((name) => [
-        name,
-        (element) => { formRefs.current[name] = element; },
-      ])
-    ),
-    []
-  );
 
-  useEffect(() => {
-    if (!problemKey || !questions?.length || !formRefs.current.question_id) return;
-
-    const problem = problems.find((item) => item.id.toLowerCase() === problemKey.toLowerCase());
-    const question = questions.find((item) =>
-      String(item.id) === problemKey ||
-      (problem && item.question_text?.trim().toLowerCase() === problem.title.toLowerCase())
-    );
-
-    if (question) formRefs.current.question_id.value = String(question.id);
-  }, [problemKey, questions]);
-
-  const readFormData = useCallback(() => ({
-    question_id: formRefs.current.question_id?.value || "",
-    user_id: formRefs.current.user_id?.value || "",
-    github_url: formRefs.current.github_url?.value || "",
-    readme_url: formRefs.current.readme_url?.value || "",
-  }), []);
-
-  useEffect(() => {
-    if (!focusRegistrationField || !showRegistrationField) return;
-    formRefs.current.user_id?.focus();
-    setFocusRegistrationField(false);
-  }, [focusRegistrationField, showRegistrationField]);
-
-  const validate = useCallback(() => {
-    const formData = readFormData();
-    const newErrors = {};
-    const qErr = validateQuestionId(formData.question_id);
-    if (qErr) newErrors.question_id = qErr;
-    if (showRegistrationField) {
-      const idErr = validateId(formData.user_id);
-      if (idErr) newErrors.user_id = idErr;
-    }
-    const ghErr = validateGithubUrl(formData.github_url);
-    if (ghErr) newErrors.github_url = ghErr;
-    const rmErr = validateReadmeUrl(formData.readme_url);
-    if (rmErr) newErrors.readme_url = rmErr;
-
-    setErrors(newErrors);
-
-    const firstInvalid = Object.keys(newErrors)[0];
-    if (firstInvalid) {
-      formRefs.current[firstInvalid]?.focus();
-    }
-
-    return Object.keys(newErrors).length === 0;
-  }, [readFormData, showRegistrationField]);
-
-  const handleChange = useCallback((e) => {
-    const { name } = e.target;
-    setErrors((prev) => {
-      if (!prev[name]) return prev;
-      return { ...prev, [name]: undefined };
-    });
-    setServerError("");
-  }, []);
-
-  // Validate a single field on blur without doing work on each keystroke.
-  const handleBlur = useCallback((e) => {
-    const { name } = e.target;
-    setErrors((prev) => {
-      const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
-      let fieldError = null;
-      if (name === "question_id") fieldError = validateQuestionId(value);
-      else if (name === "user_id" && showRegistrationField) fieldError = validateId(value);
-      else if (name === "github_url") fieldError = validateGithubUrl(value);
-      else if (name === "readme_url") fieldError = validateReadmeUrl(value);
-      if ((prev[name] || undefined) === (fieldError || undefined)) return prev;
-      return { ...prev, [name]: fieldError || undefined };
-    });
-  }, [showRegistrationField]);
-
-  // ── Submission mutation (stable module-level fn keeps useMutation dep stable) ─
-  const submitMutation = useMutation(_submitFn);
-
-  const handleSubmit = useCallback(
-    async (e) => {
-      if (e) e.preventDefault();
-      setServerError("");
-      if (submitLockRef.current || submitMutation.isPending) return;
-      if (!validate()) return;
-
-      const formData = readFormData();
-      const usingStoredUser = Boolean(storedUser && !showRegistrationField);
-      const userId = usingStoredUser ? autoUserId : Number(formData.user_id.trim());
-      if (!Number.isInteger(userId) || userId <= 0) {
-        setErrors((prev) => ({ ...prev, user_id: "Enter a valid registration number." }));
-        if (!showRegistrationField) setShowRegistrationField(true);
-        setFocusRegistrationField(true);
-        return;
-      }
-
-      submitLockRef.current = true;
-      const payload = {
-        question_id: Number(formData.question_id),
-        user_id: userId,
-        github_url: formData.github_url.trim(),
-        readme_url: formData.readme_url.trim(),
-      };
-
-      try {
-        await submitMutation.mutate(payload);
-        startTransition(() => {
-          setSubmittedForm({
-            ...formData,
-            user_id: userId,
-            accountEmail: usingStoredUser ? storedUser.email : "",
-          });
-          setSubmitted(true);
-        });
-      } catch (err) {
-        submitMutation.reset();
-        if (err instanceof ApiClientError) {
-          const fieldErrors = err.fieldErrors ?? {};
-          const hasUserFieldError = Object.prototype.hasOwnProperty.call(fieldErrors, "user_id");
-          const errorIdentity = [err.code, err.data?.code, err.message, err.data?.message]
-            .filter(Boolean)
-            .join(" ");
-          const userRejected = [404, 409, 422].includes(err.status) &&
-            (hasUserFieldError || /user|foreign.?key|\bfk\b/i.test(errorIdentity));
-
-          if (userRejected) {
-            try {
-              localStorage.removeItem("fecsdc_user");
-            } catch {
-              // Storage can be unavailable; the current form still falls back to manual entry.
-            }
-            setStoredUser(null);
-            setShowRegistrationField(true);
-            setErrors((prev) => ({
-              ...prev,
-              ...fieldErrors,
-              user_id: "No participant found with this registration number. Register first.",
-            }));
-            setFocusRegistrationField(true);
-          } else if (Object.keys(fieldErrors).length > 0) {
-            if (hasUserFieldError) {
-              setStoredUser(null);
-              setShowRegistrationField(true);
-              setFocusRegistrationField(true);
-            }
-            setErrors((prev) => ({ ...prev, ...fieldErrors }));
-            const firstField = hasUserFieldError
-              ? "user_id"
-              : ["question_id", "user_id", "github_url", "readme_url"]
-                .find((name) => fieldErrors[name]) || Object.keys(fieldErrors)[0];
-            if (firstField === "user_id") setFocusRegistrationField(true);
-            else formRefs.current[firstField]?.focus();
-          } else if (err.status === 404 || err.status === 422) {
-            setErrors((prev) => ({
-              ...prev,
-              question_id: "The selected question is no longer valid. Please choose another.",
-            }));
-            formRefs.current.question_id?.focus();
-          } else if (!(err.status === 0 && /cancelled/i.test(err.message))) {
-            setServerError(err.message || "Submission could not be processed. Please try again.");
-          }
-        } else if (err?.name !== "AbortError") {
-          setServerError("Submission could not be processed. Please try again.");
-        }
-      } finally {
-        submitLockRef.current = false;
-      }
-    },
-    [readFormData, validate, autoUserId, storedUser, showRegistrationField, submitMutation]
-  );
+  const formattedDeadline = useMemo(() => {
+    const ts = Date.parse(deadline);
+    return Number.isNaN(ts) ? deadline : new Date(ts).toLocaleString();
+  }, [deadline]);
 
   const handleReset = useCallback(() => {
-    submitLockRef.current = false;
     setSubmitted(false);
     setSubmittedForm(INITIAL_FORM);
-    setErrors({});
-    setServerError("");
-    setShowRegistrationField(!storedUser);
-    submitMutation.reset();
-  }, [storedUser, submitMutation]);
+  }, []);
 
-  // ── Locked state ─────────────────────────────────────────────────────────
+  // ── Locked state (before reveal) ─────────────────────────────────────────
   if (isLocked) {
     return (
       <Section spacing="compact">
@@ -359,7 +183,7 @@ export default function SubmitPage() {
     );
   }
 
-  // ── Success state ─────────────────────────────────────────────────────────
+  // ── Success state (already submitted) ────────────────────────────────────
   if (submitted) {
     const selectedQ = questions?.find((q) => String(q.id) === String(submittedForm.question_id));
     return (
@@ -463,7 +287,307 @@ export default function SubmitPage() {
     );
   }
 
+  // ── Closed fallback ──────────────────────────────────────────────────────
+  if (isClosed) {
+    return (
+      <Section spacing="compact">
+        <Container>
+          <PageHeader
+            eyebrow="PROJECT SUBMISSION"
+            title="Submit"
+            highlightWord="Solution"
+            description={`Submissions closed on ${formattedDeadline}.`}
+            breadcrumbs={[
+              { to: "/hackathon", label: "Hackathon" },
+              { label: "Submit" },
+            ]}
+          />
+          <Reveal>
+            <div
+              data-cursor="locked"
+              className="relative w-full max-w-5xl mx-auto py-8 sm:py-12 px-3 sm:px-4 flex flex-col items-center text-center overflow-hidden"
+            >
+              <div className="scanline-overlay pointer-events-none rounded-sm" aria-hidden="true" />
+
+              <div
+                role="status"
+                className="relative z-20 flex flex-col items-center gap-5 sm:gap-6 p-5 sm:p-8 md:p-12 rounded-sm border border-primary/40 bg-card/95 shadow-2xl max-w-2xl w-full"
+              >
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-sm bg-primary/20 border border-primary/50 flex items-center justify-center text-primary shadow-lg shadow-primary/20">
+                  <Lock className="w-7 h-7 sm:w-8 sm:h-8" aria-hidden="true" />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-center gap-2">
+                    <PillMark size="sm" />
+                    <span className="font-mono text-xs tracking-widest text-primary font-bold uppercase">
+                      STATUS: CLOSED
+                    </span>
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-foreground">
+                    Submissions are closed
+                  </h2>
+                  <p className="text-xs sm:text-sm text-muted-foreground font-mono max-w-md mx-auto leading-relaxed">
+                    The deadline has passed. Late submissions are not accepted.
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                  <Button to="/results" variant="primary">
+                    View results
+                  </Button>
+                  <Button to="/hackathon/schedule" variant="outline">
+                    View schedule
+                  </Button>
+                </div>
+
+                <a
+                  href={`mailto:${siteConfig.contactEmail}`}
+                  className="text-xs font-mono text-primary underline underline-offset-2 hover:text-accent-amber focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2 rounded"
+                >
+                  {siteConfig.contactEmail}
+                </a>
+              </div>
+            </div>
+          </Reveal>
+        </Container>
+      </Section>
+    );
+  }
+
   // ── Main form ─────────────────────────────────────────────────────────────
+  return (
+    <SubmitForm
+      questions={questions}
+      questionsLoading={questionsLoading}
+      questionsError={questionsError}
+      refetchQuestions={refetchQuestions}
+      problemKey={problemKey}
+      storedUser={storedUser}
+      setStoredUser={setStoredUser}
+      autoUserId={autoUserId}
+      isClosedRef={isClosedRef}
+      onServerClosed={() => setServerClosed(true)}
+      onSubmitted={(data) => {
+        setSubmittedForm(data);
+        setSubmitted(true);
+      }}
+    />
+  );
+}
+
+function SubmitForm({
+  questions,
+  questionsLoading,
+  questionsError,
+  refetchQuestions,
+  problemKey,
+  storedUser,
+  setStoredUser,
+  autoUserId,
+  isClosedRef,
+  onServerClosed,
+  onSubmitted,
+}) {
+  const [showRegistrationField, setShowRegistrationField] = useState(() => !storedUser);
+  const [focusRegistrationField, setFocusRegistrationField] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [serverError, setServerError] = useState("");
+  const submitLockRef = useRef(false);
+  const formRefs = useRef({});
+  const fieldRefCallbacks = useMemo(
+    () => Object.fromEntries(
+      ["question_id", "user_id", "github_url", "readme_url"].map((name) => [
+        name,
+        (element) => { formRefs.current[name] = element; },
+      ])
+    ),
+    []
+  );
+
+  useEffect(() => {
+    if (!problemKey || !questions?.length || !formRefs.current.question_id) return;
+
+    const problem = problems.find((item) => item.id.toLowerCase() === problemKey.toLowerCase());
+    const question = questions.find((item) =>
+      String(item.id) === problemKey ||
+      (problem && item.question_text?.trim().toLowerCase() === problem.title.toLowerCase())
+    );
+
+    if (question) formRefs.current.question_id.value = String(question.id);
+  }, [problemKey, questions]);
+
+  const readFormData = useCallback(() => ({
+    question_id: formRefs.current.question_id?.value || "",
+    user_id: formRefs.current.user_id?.value || "",
+    github_url: formRefs.current.github_url?.value || "",
+    readme_url: formRefs.current.readme_url?.value || "",
+  }), []);
+
+  useEffect(() => {
+    if (!focusRegistrationField || !showRegistrationField) return;
+    formRefs.current.user_id?.focus();
+    setFocusRegistrationField(false);
+  }, [focusRegistrationField, showRegistrationField]);
+
+  const validate = useCallback(() => {
+    const formData = readFormData();
+    const newErrors = {};
+    const qErr = validateQuestionId(formData.question_id);
+    if (qErr) newErrors.question_id = qErr;
+    if (showRegistrationField) {
+      const idErr = validateId(formData.user_id);
+      if (idErr) newErrors.user_id = idErr;
+    }
+    const ghErr = validateGithubUrl(formData.github_url);
+    if (ghErr) newErrors.github_url = ghErr;
+    const rmErr = validateReadmeUrl(formData.readme_url);
+    if (rmErr) newErrors.readme_url = rmErr;
+
+    setErrors(newErrors);
+
+    const firstInvalid = Object.keys(newErrors)[0];
+    if (firstInvalid) {
+      formRefs.current[firstInvalid]?.focus();
+    }
+
+    return Object.keys(newErrors).length === 0;
+  }, [readFormData, showRegistrationField]);
+
+  const handleChange = useCallback((e) => {
+    const { name } = e.target;
+    setErrors((prev) => {
+      if (!prev[name]) return prev;
+      return { ...prev, [name]: undefined };
+    });
+    setServerError("");
+  }, []);
+
+  // Validate a single field on blur without doing work on each keystroke.
+  const handleBlur = useCallback((e) => {
+    const { name } = e.target;
+    setErrors((prev) => {
+      const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
+      let fieldError = null;
+      if (name === "question_id") fieldError = validateQuestionId(value);
+      else if (name === "user_id" && showRegistrationField) fieldError = validateId(value);
+      else if (name === "github_url") fieldError = validateGithubUrl(value);
+      else if (name === "readme_url") fieldError = validateReadmeUrl(value);
+      if ((prev[name] || undefined) === (fieldError || undefined)) return prev;
+      return { ...prev, [name]: fieldError || undefined };
+    });
+  }, [showRegistrationField]);
+
+  // ── Submission mutation (stable module-level fn keeps useMutation dep stable) ─
+  const submitMutation = useMutation(_submitFn);
+
+  const handleSubmit = useCallback(
+    async (e) => {
+      if (e) e.preventDefault();
+      setServerError("");
+      if (submitLockRef.current || submitMutation.isPending) return;
+
+      // In handleSubmit: if closed (read via ref), abort before any network call
+      // and let the page re-render into the fallback.
+      if (isClosedRef.current) return;
+
+      if (!validate()) return;
+
+      if (isClosedRef.current) return;
+
+      const formData = readFormData();
+      const usingStoredUser = Boolean(storedUser && !showRegistrationField);
+      const userId = usingStoredUser ? autoUserId : Number(formData.user_id.trim());
+      if (!Number.isInteger(userId) || userId <= 0) {
+        setErrors((prev) => ({ ...prev, user_id: "Enter a valid registration number." }));
+        if (!showRegistrationField) setShowRegistrationField(true);
+        setFocusRegistrationField(true);
+        return;
+      }
+
+      if (isClosedRef.current) return;
+
+      submitLockRef.current = true;
+      const payload = {
+        question_id: Number(formData.question_id),
+        user_id: userId,
+        github_url: formData.github_url.trim(),
+        readme_url: formData.readme_url.trim(),
+      };
+
+      try {
+        await submitMutation.mutate(payload);
+        startTransition(() => {
+          onSubmitted({
+            ...formData,
+            user_id: userId,
+            accountEmail: usingStoredUser ? storedUser.email : "",
+          });
+        });
+      } catch (err) {
+        submitMutation.reset();
+        if (err instanceof ApiClientError) {
+          // Frontend: a 403 with error "closed" switches the page to the fallback
+          // (keep form values untouched until it unmounts).
+          if (err.status === 403 && (err.data?.error === "closed" || err.message === "closed")) {
+            onServerClosed();
+            return;
+          }
+
+          const fieldErrors = err.fieldErrors ?? {};
+          const hasUserFieldError = Object.prototype.hasOwnProperty.call(fieldErrors, "user_id");
+          const errorIdentity = [err.code, err.data?.code, err.message, err.data?.message]
+            .filter(Boolean)
+            .join(" ");
+          const userRejected = [404, 409, 422].includes(err.status) &&
+            (hasUserFieldError || /user|foreign.?key|\bfk\b/i.test(errorIdentity));
+
+          if (userRejected) {
+            try {
+              localStorage.removeItem("fecsdc_user");
+            } catch {
+              // Storage can be unavailable; the current form still falls back to manual entry.
+            }
+            setStoredUser(null);
+            setShowRegistrationField(true);
+            setErrors((prev) => ({
+              ...prev,
+              ...fieldErrors,
+              user_id: "No participant found with this registration number. Register first.",
+            }));
+            setFocusRegistrationField(true);
+          } else if (Object.keys(fieldErrors).length > 0) {
+            if (hasUserFieldError) {
+              setStoredUser(null);
+              setShowRegistrationField(true);
+              setFocusRegistrationField(true);
+            }
+            setErrors((prev) => ({ ...prev, ...fieldErrors }));
+            const firstField = hasUserFieldError
+              ? "user_id"
+              : ["question_id", "user_id", "github_url", "readme_url"]
+                .find((name) => fieldErrors[name]) || Object.keys(fieldErrors)[0];
+            if (firstField === "user_id") setFocusRegistrationField(true);
+            else formRefs.current[firstField]?.focus();
+          } else if (err.status === 404 || err.status === 422) {
+            setErrors((prev) => ({
+              ...prev,
+              question_id: "The selected question is no longer valid. Please choose another.",
+            }));
+            formRefs.current.question_id?.focus();
+          } else if (!(err.status === 0 && /cancelled/i.test(err.message))) {
+            setServerError(err.message || "Submission could not be processed. Please try again.");
+          }
+        } else if (err?.name !== "AbortError") {
+          setServerError("Submission could not be processed. Please try again.");
+        }
+      } finally {
+        submitLockRef.current = false;
+      }
+    },
+    [readFormData, validate, autoUserId, storedUser, showRegistrationField, submitMutation, isClosedRef, onSubmitted, onServerClosed, setStoredUser]
+  );
+
   const isQuestionsLoading = questionsLoading && questions === null;
   const questionsErrorMsg = questionsError ? questionsError.message || "Could not load challenge questions. Please try again." : "";
 

@@ -27,6 +27,28 @@ function isQuestionsLocked() {
   return Date.now() < revealTimestamp;
 }
 
+let warnedSubmissionDeadline = false;
+
+function isSubmissionClosed() {
+  const raw = process.env.SUBMISSION_DEADLINE_AT;
+  if (!raw) {
+    if (!warnedSubmissionDeadline) {
+      console.warn("[gate] WARNING: SUBMISSION_DEADLINE_AT is missing. Submissions remain open (fail-open).");
+      warnedSubmissionDeadline = true;
+    }
+    return false;
+  }
+  const parsed = Date.parse(raw);
+  if (Number.isNaN(parsed)) {
+    if (!warnedSubmissionDeadline) {
+      console.warn(`[gate] WARNING: SUBMISSION_DEADLINE_AT is invalid ('${raw}'). Submissions remain open (fail-open).`);
+      warnedSubmissionDeadline = true;
+    }
+    return false;
+  }
+  return Date.now() > parsed;
+}
+
 function httpError(status, message) {
   const error = new Error(message);
   error.status = status;
@@ -156,6 +178,10 @@ async function getQuestion(req, res) {
 }
 
 async function submitAnswer(req, res) {
+  if (isSubmissionClosed()) {
+    return res.status(403).json({ error: "closed" });
+  }
+
   const questionId = parseId(req.params.pk);
   if (!questionId)
     throw httpError(400, "Question ID must be a positive integer.");
