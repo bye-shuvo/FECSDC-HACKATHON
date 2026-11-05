@@ -38,10 +38,19 @@ function DigitSlot({ value }) {
 /**
  * Full Event Countdown Block with pill-framed unit blocks
  */
-export function Countdown({ targetDate, label = "HACKING COMMENCES IN", className = "" }) {
+export function Countdown({
+  targetDate,
+  label = "HACKING COMMENCES IN",
+  statusBadge = null,
+  expiredContent = null,
+  className = "",
+}) {
   const { days, hours, minutes, seconds, isExpired } = useCountdown(targetDate);
 
   if (isExpired) {
+    if (expiredContent) {
+      return expiredContent;
+    }
     return (
       <div className={`flex flex-col items-center justify-center p-8 rounded-full border border-primary/40 bg-card/80 ${className}`}>
         <span className="font-label text-xs tracking-widest text-primary font-semibold animate-pulse mb-2">
@@ -63,6 +72,11 @@ export function Countdown({ targetDate, label = "HACKING COMMENCES IN", classNam
 
   return (
     <div className={`flex flex-col items-center justify-center gap-6 ${className}`}>
+      {statusBadge && (
+        <div className="flex items-center justify-center">
+          {statusBadge}
+        </div>
+      )}
       {label && (
         <div className="flex items-center md:gap-2">
           <PillMark size="sm" />
