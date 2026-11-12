@@ -1,4 +1,4 @@
-import { memo, useState, useMemo, useEffect, useRef, useDeferredValue } from "react";
+import { Fragment, memo, useState, useMemo, useEffect, useRef, useDeferredValue } from "react";
 import { Trophy, Award, Clock, Crown, ArrowUpDown } from "lucide-react";
 import { useDocumentTitle } from "../hooks/useDocumentTitle.js";
 import { Container, Section } from "../components/ui/Section.jsx";
@@ -10,13 +10,19 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from ".
 import { getSolvedSummary, resultsConfig, leaderboardData } from "../data/loadData.js";
 import { Reveal } from "../components/motion/Reveal.jsx";
 
-const TRACKS = ["Problem Solving", "Web Development"];
+const TRACKS = resultsConfig.TRACKS ?? { PS: "Problem Solving", WD: "Web Development" };
+const hasTrack = resultsConfig.hasTrack ?? ((p, t) => Boolean(Array.isArray(p?.tracks) && p.tracks.includes(t)));
+const isMultiTrack = resultsConfig.isMultiTrack ?? ((p) => Boolean(Array.isArray(p?.tracks) && p.tracks.length > 1));
+const isParticipant = resultsConfig.isParticipant ?? ((p) => Boolean(p && p.judge !== null));
 
-const SolvedQuestionChips = function SolvedQuestionChips({ solved, showMax = false }) {
+const PER_QUESTION_MARK_LABEL = resultsConfig.PER_QUESTION_MARK_LABEL ?? "—";
+const NOT_PARTICIPATED_LABEL = resultsConfig.NOT_PARTICIPATED_LABEL ?? "Not participated";
+
+const SolvedQuestionChips = function SolvedQuestionChips({ solved = [], showMax = false }) {
   const visibleQuestions = solved.slice(0, 3);
   const remainingCount = solved.length - visibleQuestions.length;
   const fullListLabel = solved
-    .map((question) => `${question.title}: ${question.earned}/${question.score} points`)
+    .map((question) => `${question.title}: ${question.earned ?? PER_QUESTION_MARK_LABEL}/${question.score} points`)
     .join(", ");
 
   return (
@@ -24,10 +30,10 @@ const SolvedQuestionChips = function SolvedQuestionChips({ solved, showMax = fal
       {visibleQuestions.map((question) => (
         <li key={question.questionId}>
           <span
-            title={`${question.title}: ${question.earned}/${question.score} points`}
+            title={`${question.title}: ${question.earned ?? PER_QUESTION_MARK_LABEL}/${question.score} points`}
             className="inline-block max-w-40 truncate text-[10px] font-mono px-2 py-0.5 rounded-sm bg-muted/60 text-muted-foreground border border-border/40"
           >
-            {question.title} · {question.earned}{showMax ? `/${question.score}` : ""} pts
+            {question.title} · {question.earned ?? PER_QUESTION_MARK_LABEL}{showMax ? `/${question.score}` : ""} pts
           </span>
         </li>
       ))}
@@ -47,13 +53,19 @@ const SolvedQuestionChips = function SolvedQuestionChips({ solved, showMax = fal
 };
 
 const ParticipantRow = memo(function ParticipantRow({ entry }) {
-  const solvedCount = getSolvedSummary(entry).count;
+  const solvedSummary = getSolvedSummary(entry);
+  const solvedCount = solvedSummary.count;
+  const isJudged = isParticipant(entry);
+
+  const isPureProjects = isJudged && entry.projectsSubmitted > 0 && entry.problemsSolved === null;
+  const isPureProblemSolving = isJudged && entry.projectsSubmitted === 0 && entry.problemsSolved !== null;
+  const isBoth = isJudged && entry.projectsSubmitted > 0 && entry.problemsSolved !== null;
 
   return (
     <TableRow className="hover:bg-primary/5 transition-colors cursor-default">
       <TableCell>
         <span className="inline-flex items-center justify-center w-7 h-7 rounded-sm font-mono text-xs font-bold bg-muted/60 text-muted-foreground border border-border">
-          {entry.rank}
+          {entry.rank ?? "—"}
         </span>
       </TableCell>
       <TableCell>
@@ -62,23 +74,100 @@ const ParticipantRow = memo(function ParticipantRow({ entry }) {
             {entry.name}
           </span>
           <div className="text-xs text-muted-foreground font-mono mt-0.5">
-            Batch {entry.batch}
+            Batch {entry.batch}{entry.handle ? ` · @${entry.handle}` : ""}
           </div>
         </div>
       </TableCell>
       <TableCell>
-        <span className="font-mono text-[10px] px-2 py-0.5 rounded-sm bg-muted/60 border border-border text-muted-foreground">
-          {entry.track} · #{entry.trackRank}
-        </span>
+        {entry.tracks && entry.tracks.length > 0 ? (
+          <div className="flex flex-wrap gap-1" aria-label={`Tracks: ${entry.tracks.join(" and ")}`}>
+            {entry.tracks.map((track) => (
+              <span
+                key={track}
+                className="font-mono text-[10px] px-2 py-0.5 rounded-sm bg-muted/60 border border-border text-muted-foreground whitespace-nowrap"
+              >
+                {track}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <span className="font-mono text-[10px] px-2 py-0.5 rounded-sm bg-muted/60 border border-border text-muted-foreground">
+            Registered · did not participate
+          </span>
+        )}
       </TableCell>
       <TableCell>
-        <SolvedQuestionChips solved={entry.solved} showMax />
+        {isPureProjects && (
+          <div>
+            <SolvedQuestionChips solved={entry.solved} showMax />
+            <div className="text-[10px] font-mono text-muted-foreground mt-1">
+              Problem Solving: {NOT_PARTICIPATED_LABEL}
+            </div>
+          </div>
+        )}
+        {isPureProblemSolving && (
+          <div>
+            <div className="text-[10px] font-mono text-muted-foreground">
+              Projects: {NOT_PARTICIPATED_LABEL}
+            </div>
+            <div className="text-[10px] font-mono text-muted-foreground mt-0.5">
+              Problem Solving: {entry.problemsSolved} solved
+            </div>
+          </div>
+        )}
+        {isBoth && (
+          <div>
+            <SolvedQuestionChips solved={entry.solved} showMax />
+            <div className="text-[10px] font-mono text-muted-foreground mt-1">
+              Problem Solving: {entry.problemsSolved} solved
+            </div>
+          </div>
+        )}
+        {!isJudged && (
+          <span className="font-mono text-xs text-muted-foreground">—</span>
+        )}
       </TableCell>
       <TableCell className="text-center font-mono text-foreground">
-        {solvedCount}
+        {isJudged ? (
+          <div>
+            <span className="font-bold">{solvedCount}</span>
+            {isBoth && (
+              <div className="text-[9px] text-muted-foreground font-mono">
+                {entry.projectsSubmitted} proj · {entry.problemsSolved} prob
+              </div>
+            )}
+          </div>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        )}
       </TableCell>
-      <TableCell className="text-right font-mono font-bold text-foreground text-base">
-        {entry.totalScore.toFixed(1)}
+      <TableCell className="text-right font-mono">
+        {isJudged ? (
+          <div>
+            <div className="flex items-center justify-end gap-1.5">
+              {isBoth && (
+                <span className="text-[10px] uppercase font-bold text-muted-foreground/80 tracking-wider">
+                  Combined
+                </span>
+              )}
+              <span className="font-bold text-foreground text-base">
+                {entry.judge.avg.toFixed(2)}
+              </span>
+            </div>
+            <div className="text-[10px] text-muted-foreground font-mono">
+              {isPureProjects
+                ? `Projects score · Total: ${entry.judge.total}`
+                : isPureProblemSolving
+                  ? `Problem Solving score · Total: ${entry.judge.total}`
+                  : `Total: ${entry.judge.total}`}
+            </div>
+            <div className="text-[9px] text-muted-foreground/80 font-mono">
+              J: {entry.judge.j1}/{entry.judge.j2}/{entry.judge.j3}/{entry.judge.j4}
+            </div>
+          </div>
+        ) : (
+          <span className="font-bold text-muted-foreground text-base">—</span>
+        )}
       </TableCell>
     </TableRow>
   );
@@ -107,7 +196,26 @@ function SortableHeader({ field, label, sortField, sortDirection, onSort, classN
 export default function ResultsPage() {
   useDocumentTitle("Final Results & Leaderboard", "Official standings and scores for FEC SDC Hackathon 2026.");
 
-  const [selectedTrack, setSelectedTrack] = useState("All");
+  const getInitialTrack = () => {
+    if (typeof window !== "undefined") {
+      try {
+        const searchParams = new URLSearchParams(window.location.search);
+        const urlTrack = searchParams.get("track");
+        if (urlTrack === TRACKS.PS || urlTrack === TRACKS.WD || urlTrack === "All") {
+          return urlTrack;
+        }
+        const stored = localStorage.getItem("fecsdc_results_track");
+        if (stored === TRACKS.PS || stored === TRACKS.WD || stored === "All") {
+          return stored;
+        }
+      } catch (e) {
+        // ignore storage/URL access errors
+      }
+    }
+    return "All";
+  };
+
+  const [selectedTrack, setSelectedTrack] = useState(getInitialTrack);
   const [sortField, setSortField] = useState("rank");
   const [sortDirection, setSortDirection] = useState("asc");
 
@@ -117,9 +225,26 @@ export default function ResultsPage() {
 
   const confettiCanvasRef = useRef(null);
 
-  const tracks = useMemo(() => {
-    return ["All", ...TRACKS.filter((track) => leaderboardData.some((entry) => entry.track === track))];
-  }, []);
+  const trackList = useMemo(() => ["All", TRACKS.PS, TRACKS.WD], []);
+
+  const handleTrackChange = (track) => {
+    const nextTrack = track === TRACKS.PS || track === TRACKS.WD ? track : "All";
+    setSelectedTrack(nextTrack);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("fecsdc_results_track", nextTrack);
+        const url = new URL(window.location.href);
+        if (nextTrack === "All") {
+          url.searchParams.delete("track");
+        } else {
+          url.searchParams.set("track", nextTrack);
+        }
+        window.history.replaceState({}, "", url.toString());
+      } catch (e) {
+        // ignore
+      }
+    }
+  };
 
   const handleSort = (field) => {
     if (sortField === field) {
@@ -134,16 +259,23 @@ export default function ResultsPage() {
     let data = [...leaderboardData];
 
     if (deferredTrack !== "All") {
-      data = data.filter((d) => d.track === deferredTrack);
+      data = data.filter((d) => hasTrack(d, deferredTrack));
     }
 
-    data.sort((a, b) => {
+    const judged = data.filter((d) => isParticipant(d));
+    const unranked = data.filter((d) => !isParticipant(d));
+
+    judged.sort((a, b) => {
       let aVal = deferredSortField === "solvedCount"
         ? getSolvedSummary(a).count
-        : a[deferredSortField];
+        : deferredSortField === "totalScore"
+          ? (a.judge?.avg ?? a.totalScore ?? 0)
+          : a[deferredSortField];
       let bVal = deferredSortField === "solvedCount"
         ? getSolvedSummary(b).count
-        : b[deferredSortField];
+        : deferredSortField === "totalScore"
+          ? (b.judge?.avg ?? b.totalScore ?? 0)
+          : b[deferredSortField];
 
       if (typeof aVal === "string") {
         aVal = aVal.toLowerCase();
@@ -152,20 +284,56 @@ export default function ResultsPage() {
 
       if (aVal < bVal) return deferredSortDirection === "asc" ? -1 : 1;
       if (aVal > bVal) return deferredSortDirection === "asc" ? 1 : -1;
-      return 0;
+      return (a.rank ?? 999) - (b.rank ?? 999);
     });
 
-    return data;
+    if (deferredTrack === "All" && deferredSortField === "name") {
+      unranked.sort((a, b) => {
+        let aVal = a.name.toLowerCase();
+        let bVal = b.name.toLowerCase();
+        if (aVal < bVal) return deferredSortDirection === "asc" ? -1 : 1;
+        if (aVal > bVal) return deferredSortDirection === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    // Deduplicate by ID within the active view
+    const seen = new Set();
+    const dedupedJudged = judged.filter((item) => {
+      if (seen.has(item.id)) return false;
+      seen.add(item.id);
+      return true;
+    });
+
+    // Unranked participants appear only when deferredTrack === "All"
+    if (deferredTrack === "All") {
+      return [...dedupedJudged, ...unranked];
+    }
+    return dedupedJudged;
   }, [deferredTrack, deferredSortField, deferredSortDirection]);
 
   const summary = useMemo(() => {
-    const counts = Object.fromEntries(TRACKS.map((track) => [track, 0]));
-    const questionCount = leaderboardData.reduce((count, entry) => {
-      counts[entry.track] = (counts[entry.track] ?? 0) + 1;
-      return count + getSolvedSummary(entry).count;
-    }, 0);
+    const counts = {
+      [TRACKS.PS]: 0,
+      [TRACKS.WD]: 0,
+    };
+    let questionCount = 0;
 
-    return { participantCount: resultsConfig.totalParticipantsJudged, questionCount, counts };
+    for (const entry of leaderboardData) {
+      if (hasTrack(entry, TRACKS.PS)) {
+        counts[TRACKS.PS]++;
+      }
+      if (hasTrack(entry, TRACKS.WD)) {
+        counts[TRACKS.WD]++;
+      }
+      questionCount += getSolvedSummary(entry).count;
+    }
+
+    return {
+      participantCount: resultsConfig.totalParticipantsJudged,
+      questionCount,
+      counts,
+    };
   }, []);
 
   // Extract top 3 podium
@@ -318,6 +486,10 @@ export default function ResultsPage() {
                     ? "border-primary/80 bg-card shadow-2xl shadow-primary/10 md:-translate-y-6"
                     : "border-border/80 bg-card/90";
 
+                  const isPureProjects = participant.judge && participant.projectsSubmitted > 0 && participant.problemsSolved === null;
+                  const isPureProblemSolving = participant.judge && participant.projectsSubmitted === 0 && participant.problemsSolved !== null;
+                  const isBoth = participant.judge && participant.projectsSubmitted > 0 && participant.problemsSolved !== null;
+
                   return (
                     <Reveal key={participant.id} delay={idx * 0.1}>
                       <TiltCard
@@ -347,26 +519,56 @@ export default function ResultsPage() {
 
                           <div>
                             <div className="font-mono text-xs text-muted-foreground uppercase">
-                              Rank #{participant.rank} • {participant.track} #{participant.trackRank}
+                              Rank #{participant.rank}
                             </div>
                             <h3 className="text-xl sm:text-2xl font-display font-bold text-foreground mt-1">
                               {participant.name}
                             </h3>
                             <p className="text-xs text-primary font-mono mt-1 font-semibold">
-                              Batch {participant.batch} • {participant.track}
+                              Batch {participant.batch} • {participant.tracks?.join(" & ")}{participant.handle ? ` • @${participant.handle}` : ""}
                             </p>
                           </div>
 
                           <div className="pt-3 border-t border-border/40 flex items-center justify-between">
-                            <span className="text-xs font-mono text-muted-foreground">Total score:</span>
-                            <span className="font-mono text-2xl font-black text-foreground">
-                              {participant.totalScore.toFixed(1)}
-                            </span>
+                            <div>
+                              <span className="text-xs font-mono text-muted-foreground">
+                                {isPureProjects
+                                  ? "Projects score (Avg):"
+                                  : isPureProblemSolving
+                                    ? "Problem Solving score (Avg):"
+                                    : "Combined score (Avg):"}
+                              </span>
+                              {participant.judge && (
+                                <div className="text-[10px] font-mono text-muted-foreground">
+                                  Total: {participant.judge.total} pts
+                                </div>
+                              )}
+                            </div>
+                            <div className="text-right">
+                              <span className="font-mono text-2xl font-black text-foreground">
+                                {participant.judge ? participant.judge.avg.toFixed(2) : (participant.totalScore?.toFixed(1) ?? "—")}
+                              </span>
+                            </div>
                           </div>
+                          {participant.judge && (
+                            <div className="text-[10px] font-mono text-muted-foreground border-t border-border/20 pt-2">
+                              J1: {participant.judge.j1} · J2: {participant.judge.j2} · J3: {participant.judge.j3} · J4: {participant.judge.j4}
+                            </div>
+                          )}
                         </div>
 
-                        <div className="pt-4 mt-4 border-t border-border/40 relative z-10">
+                        <div className="pt-4 mt-4 border-t border-border/40 relative z-10 space-y-1">
                           <SolvedQuestionChips solved={participant.solved} />
+                          {isPureProjects && (
+                            <div className="text-[10px] font-mono text-muted-foreground">
+                              Problem Solving: {NOT_PARTICIPATED_LABEL}
+                            </div>
+                          )}
+                          {isBoth && (
+                            <div className="text-[10px] font-mono text-muted-foreground">
+                              Problem Solving: {participant.problemsSolved} solved
+                            </div>
+                          )}
                         </div>
                       </TiltCard>
                     </Reveal>
@@ -387,11 +589,11 @@ export default function ResultsPage() {
 
                 {/* Track Filters */}
                 <div className="flex flex-wrap items-center gap-2">
-                  {tracks.map((track) => (
+                  {trackList.map((track) => (
                     <button
                       key={track}
                       type="button"
-                      onClick={() => setSelectedTrack(track)}
+                      onClick={() => handleTrackChange(track)}
                       aria-pressed={selectedTrack === track}
                       data-cursor="button"
                       className={`px-3 py-1.5 rounded-full text-xs font-mono transition-colors select-none ${
@@ -409,11 +611,8 @@ export default function ResultsPage() {
               <div className="flex flex-wrap gap-x-6 gap-y-2 border border-border/80 rounded-sm bg-card/80 px-4 py-3 text-xs font-mono text-muted-foreground">
                 <span><strong className="text-foreground">{summary.participantCount}</strong> participants judged</span>
                 <span><strong className="text-foreground">{summary.questionCount}</strong> questions solved</span>
-                {TRACKS.map((track) => (
-                  <span key={track}>
-                    <strong className="text-foreground">{summary.counts[track]}</strong> {track} participants
-                  </span>
-                ))}
+                <span><strong className="text-foreground">{summary.counts[TRACKS.PS]}</strong> {TRACKS.PS} participants</span>
+                <span><strong className="text-foreground">{summary.counts[TRACKS.WD]}</strong> {TRACKS.WD} participants</span>
               </div>
 
               {/* Leaderboard Table with Sticky Header */}
@@ -435,7 +634,23 @@ export default function ResultsPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {processedData.map((entry) => <ParticipantRow key={entry.id} entry={entry} />)}
+                      {processedData.map((entry, index) => {
+                        const isFirstUnranked = !isParticipant(entry) && (index === 0 || isParticipant(processedData[index - 1]));
+                        return (
+                          <Fragment key={`${deferredTrack}-${entry.id}`}>
+                            {isFirstUnranked && (
+                              <TableRow className="bg-muted/20 hover:bg-muted/20 border-t border-border">
+                                <TableCell colSpan={6} className="py-2.5 px-4">
+                                  <span className="font-mono text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm bg-muted/60 border border-border text-muted-foreground">
+                                    Registered · did not participate
+                                  </span>
+                                </TableCell>
+                              </TableRow>
+                            )}
+                            <ParticipantRow entry={entry} />
+                          </Fragment>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 )}

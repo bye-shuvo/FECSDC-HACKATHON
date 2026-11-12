@@ -1,0 +1,58 @@
+Final Result & mark distribution
+
+
+ID	Name	HackerRank	Batch	Email	Project Submissions	Problem Solved
+2024631589	Jarin Tasnuva Radi	Jarin-Radi	12	jarintasnuva88di@gmail.com	0	
+2025232202	K M Shamsuzzaman Nur	kmshamsuzzamann1	13	kmshamsuzzamannur@gmail.com	0	10
+2025832189	Sirajum Munira Genius	muniragenius	12	sirajummuniragenius@gmail.com	0	
+2024531562	akm arefuzzaman	Faheem	12	arefuzzaman2005@gmail.com	0	
+2025532182	Nur Ahmmad Khan	nurahmmad842	13	nurahmmad842@gmail.com	0	
+2023352887	Nabil Mahmud	nabilnircse	12	nabilnircse@gmail.com	0	
+2025832206	Sabbir Hossain	sabbir	13	sabbir.com782@gmail.com	0	
+2025932188	Shaikh Motasim Billah	smbr0009	13	smbr0009@gmail.com	0	2
+2025132177	Adnan Mahmud Sifat	amsifat395	13	amsifat395@gmail.com	0	2
+2024631598	Md. Samiul Islam	mdsamiul73086	12	mdsamiul73086@gmail.com	3	3
+2024431590	Nusrat Fariha	nusrat_fariha_cs	12	nusrat.fariha.cs@gmail.com	1	5
+2024831596	Shahriar Hossen Sajid	shahriarhossens1	12	shahriarhossensajid21@gmail.com	3	
+2024031567	MD Sabbir Hossain	sabbiiiiir7	12	mdsabbirhossainbd392@gmail.com	2	9
+
+
+Problem No	Category	Problem	Full mark	Mark	Comments
+1	Interactive UI	Student Portfolio	100		
+2	Interactive UI	Event Landing Page	100		
+3	E-commerce UI	Product Detail Page	150		
+4	Interactive UI	Theme Switcher	150		
+5	API Data Apps	Country Explorer	200		
+6	Forms & Validation	Event Ticket Generator	200		
+7	Forms & Validation	Smart Grade Calculator	200		
+8	CRUD Apps	Lost & Found Board	250		
+9	Forms & Validation	Everyday Unit Converter	200		
+10	API Data Apps	GitHub Profile Analyzer	250		
+11	Forms & Validation	Invoice Generator	250	
+
+
+Candidate  No	ID	Name	HackerRank	Batch	Email	Questions	Problem Solved
+1	2024631598	Md. Samiul Islam	mdsamiul73086	12	mdsamiul73086@gmail.com	Q1	
+	2024631598	Md. Samiul Islam	mdsamiul73086	12	mdsamiul73086@gmail.com	Q3	
+	2024631598	Md. Samiul Islam	mdsamiul73086	12	mdsamiul73086@gmail.com	Q4	
+2	2024431590	Nusrat Fariha	nusrat_fariha_cs	12	nusrat.fariha.cs@gmail.com	Q1	
+3	2024831596	Shahriar Hossen Sajid	shahriarhossens1	12	shahriarhossensajid21@gmail.com	Q5	
+	2024831596	Shahriar Hossen Sajid	shahriarhossens1	12	shahriarhossensajid21@gmail.com	Q6	
+	2024831596	Shahriar Hossen Sajid	shahriarhossens1	12	shahriarhossensajid21@gmail.com	Q7	
+4	2024031567	MD Sabbir Hossain	sabbiiiiir7	12	mdsabbirhossainbd392@gmail.com	Q1	
+	2024031567	MD Sabbir Hossain	sabbiiiiir7	12	mdsabbirhossainbd392@gmail.com	Q4	
+
+
+Name 	Judge 1	Judge 2	Judge 3	Judge 4	Total	AVG	Rank
+Md. Samiul Islam	265.5	267	280	236.5	1049	262.25	1
+MD Sabbir Hossain	221.5	203	264	253.25	941.75	235.4375	2
+Shahriar Hossen Sajid	148.5	210	140	205	703.5	175.875	3
+kmshamsuzzamann1	90.25	99	228	88	505.25	126.3125	4
+Nusrat Fariha	106.67	89	161	145.25	501.92	125.48	5
+amsifat395	28	28	40	40	136	34	6
+Rohan	28	28	40	40	136	34	7
+
+
+	
+
+
